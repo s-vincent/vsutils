@@ -32,8 +32,6 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/select.h>
 #include <netinet/tcp.h>
 

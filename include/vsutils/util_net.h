@@ -33,6 +33,9 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/uio.h>
 #include <sys/select.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>

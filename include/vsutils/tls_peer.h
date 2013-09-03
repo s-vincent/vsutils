@@ -51,6 +51,7 @@ typedef int socklen_t;
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#include "util_net.h"
 #include "list.h"
 
 #ifdef __cplusplus
