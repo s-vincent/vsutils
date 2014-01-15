@@ -113,11 +113,11 @@ char* sys_get_error(int errnum, char* buf, size_t buflen);
  * \param cleanup cleanup function, if not NULL it is executed before father
  * _exit().
  * \param arg argument of cleanup function.
- * \return negative errno in case of error (-EINVAL, -ENOMEM, ...).\n
+ * \return -1 in case of error, check errno to know the reason.\n
  * In case of father, this function never returns (_exit).\n
  * If success 0 is returned.
  */
-int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
+int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
     void* arg);
 
 /**
@@ -131,8 +131,8 @@ int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
  * \param uid_eff the effective UID of the user.
  * \param gid_eff the effective GID of the user.
  * \param user_name user name of the account to witch.
- * \return 0 if success, -1 otherwise.
- * \note Should work on POSIX and *BSD systems.
+ * \return 0 if success, -1 otherwise (check errno to know the reason).
+ * \note Work on POSIX and *BSD systems.
  */
 int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
     gid_t gid_eff, const char* user_name);
@@ -141,8 +141,8 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
  * \brief Gain lost privileges.
  * \param uid_eff the effective UID of the user.
  * \param gid_eff the effective GID of the user.
- * \return 0 if success, -1 otherwise.
- * \note Should work on POSIX and *BSD systems.
+ * \return 0 if success, -1 otherwise (check errno to know the reason).
+ * \note Work on POSIX and *BSD systems.
  */
 int sys_gain_privileges(uid_t uid_eff, gid_t gid_eff);
 

@@ -138,7 +138,7 @@ typedef struct net_sfd_set sfd_set;
  * \param port to bind.
  * \param reuse allow socket to reuse transport address (SO_REUSE).
  * \param nodelay disable naggle algorithm for TCP sockets only (TCP_NODELAY).
- * \return socket descriptor, -1 otherwise.
+ * \return socket descriptor, -1 otherwise (check errno to know the reason).
  */
 int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
     int reuse, int nodelay);
@@ -166,7 +166,7 @@ char* net_encode_http_string(const char* str);
  * \param iovcnt number of element that should be written.
  * \param addr source address to send with UDP, set to NULL for TCP.
  * \param addr_size sizeof addr.
- * \return number of bytes written or -1 if error.
+ * \return number of bytes written or -1 if error (check errno to know the reason).
  * \warning this function work only with socket!
  */
 ssize_t net_sock_writev(int fd, const struct iovec *iov, size_t iovcnt,
@@ -179,7 +179,7 @@ ssize_t net_sock_writev(int fd, const struct iovec *iov, size_t iovcnt,
  * \param iovcnt number of element that should be filled.
  * \param addr destination address for UDP socket. Use NULL for TCP socket.
  * \param addr_size pointer on address size, will be filled by this function.
- * \return number of bytes read or -1 if error.
+ * \return number of bytes read or -1 if error (check errno to know the reason).
  * \warning this function work only with socket!
  */
 ssize_t net_sock_readv(int fd, const struct iovec *iov, size_t iovcnt,

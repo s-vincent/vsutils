@@ -89,7 +89,7 @@ int bitfield_set_bit(struct bitfield* b, uint32_t bit, int value)
     b->bits[l] = b->bits[l] & (~mask); /* set to 0 */
   }
 
-  return l;
+  return 0;
 }
 
 int bitfield_get_bit(struct bitfield* b, uint32_t bit)

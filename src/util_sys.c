@@ -125,17 +125,16 @@ char* sys_get_error(int errnum, char* buf, size_t buflen)
   return error;
 }
 
-int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
+int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
     void* arg)
 {
-  pid_t pid = -1;
-  long i = 0;
-  long max = 0;
-  int fd = -1;
-
 #if defined(_WIN32) || defined(_WIN64)
+  errno = ENOSYS;
   return -1;
 #else /* Unix */
+  pid_t pid = -1;
+  long max = 0;
+  int fd = -1;
 
   pid = fork();
 
@@ -149,18 +148,19 @@ int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
   }
   else if(pid == -1) /* error */
   {
-    return -errno;
+    return -1;
   }
 
   /* child */
+  errno = 0;
 
   if(setsid() == -1)
   {
-    return -errno;
+    return -1;
   }
 
   max = sysconf(_SC_OPEN_MAX);
-  for(i = STDIN_FILENO + 1 ; i < max ; i++)
+  for(long i = STDIN_FILENO + 1 ; i < max ; i++)
   {
     close(i);
   }
@@ -173,7 +173,7 @@ int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
 
   if(chdir(dir) == -1)
   {
-    return -errno;
+    return -1;
   }
 
   /* change mask */
@@ -204,6 +204,7 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
 {
 #if defined(_WIN32) || defined(_WIN64)
   /* not implemented */
+  errno = ENOSYS;
   return -1;
 #else /* Unix */
   (void)gid_eff; /* not used for the moment */
@@ -223,6 +224,7 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
         /* runs as root and no user_name specified,
          * cannot drop privileges.
          */
+        errno = EINVAL;
         return -1;
       }
 
@@ -244,9 +246,12 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
     else
     {
       /* user does not exist, cannot lost our privileges */
+      errno = EINVAL;
       return -1;
     }
   }
+
+  errno = EINVAL;
 
   /* cannot lost our privileges */
   return -1;
@@ -256,6 +261,7 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
 int sys_gain_privileges(uid_t uid_eff, gid_t gid_eff)
 {
 #if defined(_WIN32) || defined(_WIN64)
+  errno = ENOSYS;
   return -1;
 #else /* Unix */
 #ifdef _POSIX_SAVED_IDS
