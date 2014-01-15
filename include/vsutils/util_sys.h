@@ -113,9 +113,9 @@ char* sys_get_error(int errnum, char* buf, size_t buflen);
  * \param cleanup cleanup function, if not NULL it is executed before father
  * _exit().
  * \param arg argument of cleanup function.
- * \return -1 if error.\n
+ * \return negative errno in case of error (-EINVAL, -ENOMEM, ...).\n
  * In case of father, this function never returns (_exit).\n
- * If success 0 is returned in case of child.
+ * If success 0 is returned.
  */
 int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
     void* arg);

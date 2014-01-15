@@ -148,6 +148,7 @@ static struct ssl_peer* tls_peer_find_connection(struct tls_peer* peer,
 static void tls_peer_add_connection(struct tls_peer* peer,
     struct ssl_peer* speer)
 {
+  peer->last_error = 0;
   list_head_add_tail(&peer->remote_peers, &speer->list);
 }
 
@@ -159,6 +160,7 @@ static void tls_peer_add_connection(struct tls_peer* peer,
 static void tls_peer_remove_connection(struct tls_peer* peer,
     struct ssl_peer* ssl)
 {
+  peer->last_error = 0;
   list_head_remove(&peer->remote_peers, &ssl->list);
   ssl_peer_free(&ssl);
 }
@@ -171,6 +173,8 @@ static void tls_peer_clear_connection(struct tls_peer* peer)
 {
   struct list_head* n = NULL;
   struct list_head* get = NULL;
+
+  peer->last_error = 0;
 
   list_head_iterate_safe(&peer->remote_peers, get, n)
   {
@@ -289,6 +293,8 @@ static int tls_peer_setup(struct tls_peer* peer, enum protocol_type type,
   SSL_METHOD* method_server = NULL;
   SSL_METHOD* method_client = NULL;
 
+  peer->last_error = 0;
+
   /* initialize list */
   list_head_init(&peer->remote_peers);
 
@@ -365,8 +371,10 @@ static ssize_t tls_peer_read(struct tls_peer* peer, char* buf, ssize_t buflen,
   BIO* bio_read = NULL;
   ssize_t len = -1;
   int err = 0;
+  peer->last_ssl_error = 0;
 
   /* printf("tls_peer_read\n"); */
+  peer->last_error = 0;
 
   bio_read = BIO_new_mem_buf(buf, buflen);
   BIO_set_mem_eof_return(bio_read, -1);
@@ -386,6 +394,7 @@ static ssize_t tls_peer_read(struct tls_peer* peer, char* buf, ssize_t buflen,
 
   if(len <= 0)
   {
+    peer->last_ssl_error = err;
     tls_peer_manage_error(peer, speer, err);
   }
 
@@ -421,6 +430,8 @@ void tls_peer_print_connection(struct tls_peer* peer)
   struct list_head* get = NULL;
   char buf[INET6_ADDRSTRLEN];
 
+  peer->last_error = 0;
+
   fprintf(stdout, "Current peer informations (List size = %u)\n",
       list_head_size(&peer->remote_peers));
 
@@ -451,16 +462,17 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
   struct ssl_peer* speer = NULL;
   struct sockaddr_storage daddr2;
 
-  tls_peer_write(peer, NULL, 0, daddr, daddr_size);
-  speer = tls_peer_find_connection(peer, daddr, daddr_size);
-  if(!speer)
+  peer->last_error = 0;
+
+  if(tls_peer_write(peer, NULL, 0, daddr, daddr_size) == -1 ||
+      (!(speer = tls_peer_find_connection(peer, daddr, daddr_size))))
   {
     return -1;
   }
 
   while(!speer->handshake_complete)
   {
-    fd_set fdsr;
+    sfd_set fdsr;
 
     FD_ZERO(&fdsr);
     FD_SET(peer->sock, &fdsr);
@@ -483,11 +495,11 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
       }
     }
 
-    ret = select(nsock, &fdsr, NULL, NULL, &tv);
+    ret = select(nsock, (void*)&fdsr, NULL, NULL, &tv);
 
     if(ret > 0)
     {
-      if(FD_ISSET(peer->sock, &fdsr))
+      if(net_sfd_has_data(nsock, peer->sock, &fdsr))
       {
         ssize_t nb = -1;
 
@@ -518,10 +530,19 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
                 daddr_size);
           }
         }
+        else
+        {
+          peer->last_error = errno;
+        }
       }
     }
     else
     {
+      if(ret == -1)
+      {
+        peer->last_error = errno;
+      }
+
       /* if timeout or syscall error, break loop */
       break;
     }
@@ -537,9 +558,11 @@ ssize_t tls_peer_tcp_read(struct tls_peer* peer, char* buf, ssize_t buflen,
   struct ssl_peer* speer = NULL;
 
   /* printf("tls_peer_tcp_read\n"); */
+  peer->last_error = 0;
 
   if(!addr || peer->type != TCP)
   {
+    peer->last_error = EINVAL;
     return -1;
   }
 
@@ -564,6 +587,7 @@ ssize_t tls_peer_tcp_read(struct tls_peer* peer, char* buf, ssize_t buflen,
     if(!speer)
     {
       SSL_free(ssl);
+      peer->last_error = errno;
       return -1;
     }
     tls_peer_add_connection(peer, speer);
@@ -579,6 +603,7 @@ ssize_t tls_peer_udp_read(struct tls_peer* peer, char* buf, ssize_t buflen,
   struct ssl_peer* speer = NULL;
 
   /* printf("tls_peer_udp_read\n"); */
+  peer->last_error = 0;
 
   if(!addr || peer->type != UDP)
   {
@@ -633,6 +658,8 @@ ssize_t tls_peer_write(struct tls_peer* peer, const char* buf, ssize_t buflen,
   struct ssl_peer* speer = NULL;
 
   /* printf("tls_write\n"); */
+  peer->last_error = 0;
+  peer->last_ssl_error = 0;
 
   speer = tls_peer_find_connection(peer, addr, addrlen);
 
@@ -670,12 +697,12 @@ ssize_t tls_peer_write(struct tls_peer* peer, const char* buf, ssize_t buflen,
     }
 
     tls_peer_add_connection(peer, speer);
-    SSL_do_handshake(speer->ssl);
-    return 0;
+    return SSL_do_handshake(speer->ssl);
   }
 
   if(!buf)
   {
+    peer->last_error = EINVAL;
     return -1;
   }
 
@@ -684,6 +711,7 @@ ssize_t tls_peer_write(struct tls_peer* peer, const char* buf, ssize_t buflen,
 
   if(len <= 0)
   {
+    peer->last_ssl_error = err;
     tls_peer_manage_error(peer, speer, err);
   }
 
@@ -779,6 +807,7 @@ struct tls_peer* tls_peer_new(enum protocol_type type, const char* addr,
 
   memset(ret, 0x00, sizeof(struct tls_peer));
 
+  ret->last_error = 0;
   ret->verify_callback = verify_callback;
 
   if(tls_peer_setup(ret, type, addr, port, ca_file, cert_file, key_file) == -1)

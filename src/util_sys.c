@@ -34,6 +34,7 @@
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
+#include <errno.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -103,7 +104,7 @@ int sys_is_little_endian(void)
 char* sys_get_error(int errnum, char* buf, size_t buflen)
 {
   char* error = NULL;
-#if _POSIX_C_SOURCE == 200112L && !defined(_GNU_SOURCE)
+#if _POSIX_C_SOURCE >= 200112L && !defined(_GNU_SOURCE)
   /* POSIX version */
   int ret = 0;
   ret = strerror_r(errnum, buf, buflen);
@@ -148,14 +149,14 @@ int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
   }
   else if(pid == -1) /* error */
   {
-    return -1;
+    return -errno;
   }
 
   /* child */
 
   if(setsid() == -1)
   {
-    return -1;
+    return -errno;
   }
 
   max = sysconf(_SC_OPEN_MAX);
@@ -172,7 +173,7 @@ int sys_go_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
 
   if(chdir(dir) == -1)
   {
-    return -1;
+    return -errno;
   }
 
   /* change mask */
@@ -202,6 +203,7 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
     gid_t gid_eff, const char* user_name)
 {
 #if defined(_WIN32) || defined(_WIN64)
+  /* not implemented */
   return -1;
 #else /* Unix */
   (void)gid_eff; /* not used for the moment */

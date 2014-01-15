@@ -83,6 +83,8 @@ struct tls_peer
 {
   enum protocol_type type; /**< Transport protocol used (TCP or UDP). */
   int sock; /**< Server socket descriptor. */
+  int last_error; /**< Last error number (errno). */
+  int last_ssl_error; /**< Last SSL error number. */
   SSL_CTX* ctx_client; /**< SSL context for client side. */
   SSL_CTX* ctx_server; /**< SSL context for server side. */
   struct list_head remote_peers; /**< Remote peers. */

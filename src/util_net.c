@@ -267,7 +267,7 @@ char* net_encode_http_string(const char* str)
   return p;
 }
 
-void net_iovec_free_data(struct iovec* iov, uint32_t nb)
+void net_iovec_free_data(struct iovec* iov, size_t nb)
 {
   size_t i = 0;
 
@@ -369,6 +369,7 @@ int net_make_sockaddr(int family, const char* address, uint16_t port,
   struct addrinfo* res = NULL;
   struct addrinfo* p = NULL;
   char service[8];
+  int ret = 0;
 
   snprintf(service, sizeof(service), "%u", port);
   service[sizeof(service)-1] = 0x00;
@@ -388,10 +389,15 @@ int net_make_sockaddr(int family, const char* address, uint16_t port,
   {
     memcpy(&addr, p->ai_addr, p->ai_addrlen);
     *addr_size = p->ai_addrlen;
-    return 0;
+    freeaddrinfo(res);
+    ret = 0;
+  }
+  else
+  {
+    ret = -1;
   }
 
-  return -1;
+  return ret;
 }
 
 int net_ipv4_address_is_valid(const char* address)

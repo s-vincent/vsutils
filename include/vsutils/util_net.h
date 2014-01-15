@@ -89,7 +89,7 @@ typedef struct iovec
 struct net_sfd_set
 {
 #if !defined(_WIN32) && !defined(_WIN64)
-  long int fds_bits[NET_SFD_SETSIZE / (8 * sizeof(long int)) + 1]; /**< Bitmask. */
+  long int fds_bits[NET_SFD_SETSIZE / (8 * sizeof(long int))]; /**< Bitmask. */
 
   /**
    * \def __fds_bits
@@ -149,13 +149,13 @@ int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
  * \param iov the iovec array.
  * \param nb number of elements.
  */
-void net_iovec_free_data(struct iovec* iov, uint32_t nb);
+void net_iovec_free_data(struct iovec* iov, size_t nb);
 
 /**
  * \brief Encode string for HTTP request.
  * \param str string to encode.
  * \return encoding string or NULL if problem.
- * \warning The caller must free the return value.
+ * \warning The caller must free the return value after use.
  */
 char* net_encode_http_string(const char* str);
 
@@ -164,8 +164,7 @@ char* net_encode_http_string(const char* str);
  * \param fd the socket descriptor to write the data.
  * \param iov the iovector which contains the data.
  * \param iovcnt number of element that should be written.
- * \param addr source address to send with UDP, set to NULL if you want to send
- * with TCP.
+ * \param addr source address to send with UDP, set to NULL for TCP.
  * \param addr_size sizeof addr.
  * \return number of bytes written or -1 if error.
  * \warning this function work only with socket!
@@ -178,8 +177,7 @@ ssize_t net_sock_writev(int fd, const struct iovec *iov, size_t iovcnt,
  * \param fd the socket descriptor to read the data.
  * \param iov the iovector to store the data.
  * \param iovcnt number of element that should be filled.
- * \param addr if not NULL it considers using a UDP socket, otherwise it
- * considers using a TCP one.
+ * \param addr destination address for UDP socket. Use NULL for TCP socket.
  * \param addr_size pointer on address size, will be filled by this function.
  * \return number of bytes read or -1 if error.
  * \warning this function work only with socket!
