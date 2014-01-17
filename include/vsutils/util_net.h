@@ -53,8 +53,8 @@ extern "C"
  */
 enum protocol_type
 {
-  UDP = IPPROTO_UDP, /**< UDP protocol */
-  TCP = IPPROTO_TCP, /**< TCP protocol */
+  NET_UDP = IPPROTO_UDP, /**< UDP protocol. */
+  NET_TCP = IPPROTO_TCP, /**< TCP protocol. */
 };
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -103,7 +103,8 @@ struct net_sfd_set
 };
 
 /**
- * \brief Typedef for struct net_sfd_set.
+ * \typedef sfd_set
+ * \brief Short name for struct net_sfd_set.
  */
 typedef struct net_sfd_set sfd_set;
 

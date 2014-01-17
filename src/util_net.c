@@ -292,8 +292,8 @@ int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = (type == TCP ? SOCK_STREAM : SOCK_DGRAM);
-  hints.ai_protocol = (type == TCP ? IPPROTO_TCP : IPPROTO_UDP);
+  hints.ai_socktype = (type == NET_TCP ? SOCK_STREAM : SOCK_DGRAM);
+  hints.ai_protocol = (type == NET_TCP ? IPPROTO_TCP : IPPROTO_UDP);
   hints.ai_flags = AI_PASSIVE;
 
   if(getaddrinfo(addr, service, &hints, &res) != 0)
@@ -316,7 +316,7 @@ int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
       setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int));
     }
 
-    if (type == TCP && nodelay)
+    if (type == NET_TCP && nodelay)
     {
       setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(int));
     }

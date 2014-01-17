@@ -298,7 +298,7 @@ static int tls_peer_setup(struct tls_peer* peer, enum protocol_type type,
   /* initialize list */
   list_head_init(&peer->remote_peers);
 
-  if(type == UDP)
+  if(type == NET_UDP)
   {
     method_client = (SSL_METHOD*)DTLSv1_client_method();
     method_server = (SSL_METHOD*)DTLSv1_server_method();
@@ -484,7 +484,7 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
     nsock = peer->sock;
     nsock++;
 
-    if(peer->type == TCP)
+    if(peer->type == NET_TCP)
     {
       speer->handshake_complete = SSL_is_init_finished(speer->ssl);
 
@@ -503,7 +503,7 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
       {
         ssize_t nb = -1;
 
-        if(peer->type == UDP)
+        if(peer->type == NET_UDP)
         {
           nb = recvfrom(peer->sock, buf, sizeof(buf), 0,
               (struct sockaddr*)&daddr2, &daddr_size);
@@ -515,7 +515,7 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
 
         if(nb > 0)
         {
-          if(peer->type == TCP)
+          if(peer->type == NET_TCP)
           {
             if(tls_peer_tcp_read(peer, buf, nb, bufout, sizeof(bufout), daddr,
                 daddr_size, peer->sock) == -1)
@@ -560,7 +560,7 @@ ssize_t tls_peer_tcp_read(struct tls_peer* peer, char* buf, ssize_t buflen,
   /* printf("tls_peer_tcp_read\n"); */
   peer->last_error = 0;
 
-  if(!addr || peer->type != TCP)
+  if(!addr || peer->type != NET_TCP)
   {
     peer->last_error = EINVAL;
     return -1;
@@ -605,7 +605,7 @@ ssize_t tls_peer_udp_read(struct tls_peer* peer, char* buf, ssize_t buflen,
   /* printf("tls_peer_udp_read\n"); */
   peer->last_error = 0;
 
-  if(!addr || peer->type != UDP)
+  if(!addr || peer->type != NET_UDP)
   {
     return -1;
   }
@@ -676,7 +676,7 @@ ssize_t tls_peer_write(struct tls_peer* peer, const char* buf, ssize_t buflen,
       return -1;
     }
 
-    if(peer->type != TCP)
+    if(peer->type != NET_TCP)
     {
       bio_write = BIO_new_dgram(peer->sock, BIO_NOCLOSE);
       (void)BIO_dgram_set_peer(bio_write, addr);
