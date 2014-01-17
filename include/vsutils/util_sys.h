@@ -29,7 +29,6 @@
 #endif
 
 #include <string.h>
-
 #include <stdint.h>
 
 #ifndef _MSC_VER

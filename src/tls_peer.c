@@ -499,7 +499,7 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
 
     if(ret > 0)
     {
-      if(net_sfd_has_data(nsock, peer->sock, &fdsr))
+      if(net_sfd_is_ready(nsock, peer->sock, &fdsr))
       {
         ssize_t nb = -1;
 

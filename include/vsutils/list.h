@@ -45,7 +45,7 @@
  * {
  *     int id;
  *     struct list_head list;
- * }
+ * };
  *
  * struct list_head list;
  * struct list_head* tmp = NULL;

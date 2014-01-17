@@ -16,7 +16,7 @@
 
 /**
  * \file sample_list.c
- * \brief Sample program for list_head.
+ * \brief Tests for lists.
  * \author Sebastien Vincent
  * \date 2013
  */
@@ -25,6 +25,16 @@
 #include <stdlib.h>
 
 #include "list.h"
+
+/**
+ * \struct element
+ * \brief Simple element structure.
+ */
+struct element
+{
+  int id; /**< \brief Identifier. */
+  struct list_head list; /**< \brief For list management. */
+};
 
 /**
  * \brief Entry point of the program.

@@ -186,18 +186,18 @@ ssize_t net_sock_readv(int fd, const struct iovec *iov, size_t iovcnt,
     const struct sockaddr* addr, socklen_t* addr_size);
 
 /**
- * \brief Test if socket has data to read.
+ * \brief Returns whether or not socket has been triggered for an event.
  *
- * It is a convenient function to test if socket is valid, can be tested in
- * select and if it has data to read.
- * \param sock socket to read.
+ * It is a convenient function to test if socket is ready for read or
+ * write operation (depending of fds parameter).
+ * \param sock socket to check.
  * \param nsock parameter of (p)select() function.
- * \param fdsr set of descriptor (see select()).
+ * \param fds set of descriptor (see select()) to check.
  * \return 1 if socket has data, 0 otherwise.
  */
-static inline int net_sfd_has_data(int sock, int nsock, sfd_set* fdsr)
+static inline int net_sfd_is_ready(int sock, int nsock, sfd_set* fds)
 {
-  return (sock > 0 && sock < nsock && NET_SFD_ISSET(sock, fdsr)) ? 1 : 0;
+  return (sock > 0 && sock < nsock && NET_SFD_ISSET(sock, fds)) ? 1 : 0;
 }
 
 /**

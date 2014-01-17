@@ -16,7 +16,7 @@
 
 /**
  * \file test_bitfield.c
- * \brief Test for the bitfield.
+ * \brief Tests for the bitfield.
  * \author Sebastien Vincent
  */
 
@@ -36,7 +36,9 @@ int main(int argc, char** argv)
   struct bitfield* b = NULL;
   uint8_t i = 0;
 
-  printf("%s %d\n", argv[0], argc);
+  (void)argc;
+  (void)argv;
+
   b = bitfield_new(1);
 
   for (i = 1 ; i < 32 ; i++)
