@@ -39,28 +39,22 @@ struct bitfield* bitfield_new(uint32_t nb)
 
   size = sizeof(uint32_t) * nb;
 
-  ret = malloc(sizeof(struct bitfield));
+  ret = malloc(sizeof(struct bitfield) + size);
   if(!ret)
   {
     return NULL;
   }
 
-  memset(ret, 0x00, sizeof(struct bitfield));
-  ret->bits = malloc(size);
-
-  if(!ret->bits)
-  {
-    free(ret);
-    return NULL;
-  }
-
+  memset(ret, 0x00, sizeof(struct bitfield) + size);
+  /* ret->bits = malloc(size); */
+  ret->bits = (uint32_t*)(ret + sizeof(struct bitfield));
   ret->len = nb;
   return ret;
 }
 
 void bitfield_free(struct bitfield** b)
 {
-  free((*b)->bits);
+  /* free((*b)->bits); */
   free(*b);
   *b = NULL;
 }
