@@ -47,8 +47,9 @@ struct bitfield* bitfield_new(uint32_t nb)
 
   memset(ret, 0x00, sizeof(struct bitfield) + size);
   /* ret->bits = malloc(size); */
-  ret->bits = (uint32_t*)(ret + sizeof(struct bitfield));
+  ret->bits = (uint32_t*)(((char*)ret) + sizeof(struct bitfield));
   ret->len = nb;
+
   return ret;
 }
 

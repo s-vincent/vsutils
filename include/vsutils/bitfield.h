@@ -36,8 +36,8 @@ extern "C"
  */
 struct bitfield
 {
-  uint32_t* bits; /**< The bitfield (array of "four bytes" integer) */
   uint32_t len; /**< Lenght of bits */
+  uint32_t* bits; /**< The bitfield (array of "four bytes" integer) */
 };
 
 /**
