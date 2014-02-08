@@ -118,7 +118,7 @@ static int netevt_select_wait(struct netevt_impl* impl, netevt obj, int timeout,
        */
       for(unsigned int i = 0 ; i < 3 ; i++)
       {
-        fd_set* fds = NULL;
+        sfd_set* fds = NULL;
         int state = 0;
 
         if(nb > nb_events)
@@ -129,19 +129,19 @@ static int netevt_select_wait(struct netevt_impl* impl, netevt obj, int timeout,
         if(i == 0)
         {
           /* read */
-          fds = (fd_set*)&fdsr;
+          fds = &fdsr;
           state = NETEVT_STATE_READ;
         }
         else if(i == 1)
         {
           /* write */
-          fds = (fd_set*)&fdsw;
+          fds = &fdsw;
           state = NETEVT_STATE_WRITE;
         }
         else if(i == 2)
         {
           /* exception */
-          fds = (fd_set*)&fdse;
+          fds = &fdse;
           state = NETEVT_STATE_OTHER;
         }
 
