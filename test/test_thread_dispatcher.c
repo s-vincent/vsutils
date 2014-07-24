@@ -46,7 +46,7 @@ int main(int argc, char** argv)
   (void)argv;
 
   fprintf(stdout, "Begin\n");
-  th = thread_dispatcher_new(10000);
+  th = thread_dispatcher_new(10);
   fprintf(stdout, "Thread dispatcher: %p\n", (void*)th);
 
   if(!th)
