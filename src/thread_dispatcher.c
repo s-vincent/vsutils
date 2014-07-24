@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <sys/time.h>
 #include <time.h>
@@ -19,6 +20,47 @@
 #endif
 
 #include "thread_dispatcher.h"
+
+#ifdef __MACH__
+/* MacOS X does not have pthread_mutex_timedlock */
+
+/**
+ * \brief Implementation of pthread_mutex_timedlock for MacOS X.
+ * \param mutex the mutex.
+ * \param abs_timeout the absolute timeout.
+ * \return 0 if success, error value otherwise.
+ */
+static int priv_pthread_mutex_timedlock(pthread_mutex_t* mutex,
+    const struct timespec* abs_timeout)
+{
+  int ret = 0;
+  struct timeval tv;
+  struct timespec ts;
+
+  ts.tv_sec = 0;
+  ts.tv_nsec = 10000000;
+
+  do
+  {
+    ret = pthread_mutex_trylock(mutex);
+  
+    if(ret == EBUSY)
+    {
+      gettimeofday(&tv, NULL);
+      if(tv.tv_sec >= abs_timeout->tv_sec &&
+          (tv.tv_usec * 1000) >= abs_timeout->tv_nsec)
+      {
+        return ETIMEDOUT;
+      }
+    }
+  }
+  while(ret == EBUSY);
+
+  return ret;
+}
+
+#define pthread_mutex_timedlock priv_pthread_mutex_timedlock
+#endif
 
 /**
  * \def DISPATCHER_CONDITION_TIMEOUT
@@ -125,7 +167,7 @@ thread_dispatcher thread_dispatcher_new(unsigned nb)
     return NULL;
   }
 
-  if(pthread_mutex_init(&ret->mutex_tasks, NULL) != 0)
+  if(pthread_mutex_init(&ret->mutex_tasks, &mutexattr) != 0)
   {
     pthread_mutexattr_destroy(&mutexattr);
     free(ret);
@@ -272,7 +314,7 @@ int thread_dispatcher_pop(thread_dispatcher obj, struct thread_task* task)
   struct timespec ts;
   int ret = 0;
 
-#ifdef _POSIX_TIMERS
+#if defined(_POSIX_TIMERS) && !defined(__MACH__)
   clock_gettime(CLOCK_REALTIME, &ts);
   ts.tv_sec += DISPATCHER_CONDITION_TIMEOUT;
 #else
