@@ -118,19 +118,19 @@ typedef struct net_sfd_set sfd_set;
  * \def NET_SFD_SET
  * \brief FD_SET wrapper.
  */
-#define NET_SFD_SET(fd, set) FD_SET((fd), (set))
+#define NET_SFD_SET(fd, set) FD_SET((fd), (fd_set*)(set))
 
 /**
  * \def NET_SFD_ISSET
  * \brief FD_ISSET wrapper.
  */
-#define NET_SFD_ISSET(fd, set) FD_ISSET((fd), (set))
+#define NET_SFD_ISSET(fd, set) FD_ISSET((fd), (fd_set*)(set))
 
 /**
  * \def NET_SFD_CLR
  * \brief FD_CLR wrapper.
  */
-#define NET_SFD_CLR(fd, set) FD_CLR((fd), (set))
+#define NET_SFD_CLR(fd, set) FD_CLR((fd), (fd_set*)(set))
 
 /**
  * \brief Create and bind socket.

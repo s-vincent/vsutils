@@ -141,8 +141,8 @@ struct netevt* netevt_new(enum netevt_method method)
             ret->impl_destroy = netevt_epoll_destroy;
             break;
         case NETEVT_KQUEUE:
-            //ret->impl_init = netevt_kqueue_init;
-            //ret->impl_destroy = netevt_kqueue_destroy;
+            ret->impl_init = netevt_kqueue_init;
+            ret->impl_destroy = netevt_kqueue_destroy;
             break;
         default:
             /* should not happen */

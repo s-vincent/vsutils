@@ -155,7 +155,7 @@ int main(int argc, char** argv)
           }
           else
           {
-            fprintf(stdout, "read operation\n");
+            fprintf(stdout, "Read operation\n");
             fprintf(stdout, "Socket data: %s\n",
                 (char*)evts[i].socket.data);
 
