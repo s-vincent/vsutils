@@ -12,6 +12,13 @@
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 
+/* some typedef for *BSD */ 
+#ifndef __APPLE
+typedef unsigned short u_short;
+typedef unsigned char u_char;
+typedef unsigned int u_int;
+#endif
+
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
@@ -94,6 +101,8 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
   struct netevt_kqueue* impl_kqueue = impl->priv;
   struct timespec ts;
 
+  (void)obj;
+
   /* -1 is infinite */
   if(timeout != -1)
   {
@@ -120,7 +129,7 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
     size_t nb = 0;
 
     /* at least one descriptor is ready for read, write or other */
-    for(unsigned int i = 0 ; i < ret ; i++)
+    for(int i = 0 ; i < ret ; i++)
     {
       int already = 0;
 
@@ -201,6 +210,8 @@ static int netevt_kqueue_add_socket(struct netevt_impl* impl, netevt obj,
   int evt = 0;
   int extra = 0;
 
+  (void)obj;
+
   if(impl_kqueue->fds_next >= NET_SFD_SETSIZE)
   {
     return -1;
@@ -240,11 +251,13 @@ static int netevt_kqueue_remove_socket(struct netevt_impl* impl, netevt obj,
 {
   int ret = 0;
   struct netevt_kqueue* impl_kqueue = impl->priv;
-  unsigned int i = 0;
+  int i = 0;
 
-  for(i = 0 ; i < NET_SFD_SETSIZE ; i++)
+  (void)obj;
+
+  for(i = 0 ; i < (int)NET_SFD_SETSIZE ; i++)
   {
-    if(impl_kqueue->mntrs[i].ident == sock->sock)
+    if(impl_kqueue->mntrs[i].ident == (uintptr_t)sock->sock)
     {
       EV_SET(&impl_kqueue->mntrs[i], sock->sock,
           EVFILT_READ | EVFILT_WRITE, EV_DELETE, 0,
@@ -266,7 +279,7 @@ static int netevt_kqueue_remove_socket(struct netevt_impl* impl, netevt obj,
   if(i < impl_kqueue->nsock)
   {
     /* reorder array */
-    for(unsigned int j = i ; j < impl_kqueue->nsock ; j++)
+    for(int j = i ; j < impl_kqueue->nsock ; j++)
     {
       impl_kqueue->mntrs[j] = impl_kqueue->mntrs[j + 1];
     }
