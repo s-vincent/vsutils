@@ -13,7 +13,7 @@
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 
 /* some typedef for *BSD */ 
-#ifndef __APPLE
+#ifndef __APPLE__ && !defined(__BSD_VISIBLE)_
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
