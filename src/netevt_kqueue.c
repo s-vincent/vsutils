@@ -23,6 +23,10 @@
 #include "list.h"
 #include "util_net.h"
 
+#ifndef EV_OOBAND
+#define EV_OOBAND EV_FLAG1
+#endif
+
 /**
  * \struct netevt_kqueue
  * \brief Kqueue network event implementation.
