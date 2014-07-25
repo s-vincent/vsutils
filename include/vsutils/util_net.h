@@ -69,6 +69,16 @@ typedef struct iovec
 }iovec;
 #endif
 
+/**
+ * \brief Specific cast for FD_* macro.
+ * \def NET_SFD_CAST
+ */
+#ifdef __MACH__
+#define NET_SFD_CAST (fd_set*)
+#else
+#define NET_SFD_CAST
+#endif
+
 /* to specify a user-defined FD_SETSIZE */
 #ifndef NET_SFD_SETSIZE
 /**
@@ -118,19 +128,19 @@ typedef struct net_sfd_set sfd_set;
  * \def NET_SFD_SET
  * \brief FD_SET wrapper.
  */
-#define NET_SFD_SET(fd, set) FD_SET((fd), (fd_set*)(set))
+#define NET_SFD_SET(fd, set) FD_SET((fd), NET_SFD_CAST(set))
 
 /**
  * \def NET_SFD_ISSET
  * \brief FD_ISSET wrapper.
  */
-#define NET_SFD_ISSET(fd, set) FD_ISSET((fd), (fd_set*)(set))
+#define NET_SFD_ISSET(fd, set) FD_ISSET((fd), NET_SFD_CAST(set))
 
 /**
  * \def NET_SFD_CLR
  * \brief FD_CLR wrapper.
  */
-#define NET_SFD_CLR(fd, set) FD_CLR((fd), (fd_set*)(set))
+#define NET_SFD_CLR(fd, set) FD_CLR((fd), NET_SFD_CAST(set))
 
 /**
  * \brief Create and bind socket.

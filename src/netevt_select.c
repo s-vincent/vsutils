@@ -187,7 +187,7 @@ static int netevt_select_add_socket(struct netevt_impl* impl, netevt obj,
 
   (void)obj;
 
-  if(sock->sock >= NET_SFD_SETSIZE)
+  if(sock->sock >= (int)NET_SFD_SETSIZE)
   {
     return -1;
   }
@@ -223,7 +223,7 @@ static int netevt_select_remove_socket(struct netevt_impl* impl, netevt obj,
 
   (void)obj;
 
-  if(sock->sock >= NET_SFD_SETSIZE)
+  if(sock->sock >= (int)NET_SFD_SETSIZE)
   {
     return -1;
   }

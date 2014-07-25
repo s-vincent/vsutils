@@ -474,8 +474,8 @@ int tls_peer_do_handshake(struct tls_peer* peer, const struct sockaddr* daddr,
   {
     sfd_set fdsr;
 
-    FD_ZERO(&fdsr);
-    FD_SET(peer->sock, &fdsr);
+    NET_SFD_ZERO(&fdsr);
+    NET_SFD_SET(peer->sock, &fdsr);
 
     /* 5 seconds of timeout */
     tv.tv_sec = 5;

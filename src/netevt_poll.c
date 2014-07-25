@@ -227,7 +227,7 @@ static int netevt_poll_remove_socket(struct netevt_impl* impl, netevt obj,
 {
   int ret = 0;
   struct netevt_poll* impl_poll = impl->priv;
-  int i = 0;
+  unsigned int i = 0;
 
   (void)obj;
 
@@ -250,10 +250,10 @@ static int netevt_poll_remove_socket(struct netevt_impl* impl, netevt obj,
   impl_poll->nsock--;
   impl_poll->fds_next--;
 
-  if(i < impl_poll->nsock)
+  if(i < (unsigned int)impl_poll->nsock)
   {
     /* reorder array */
-    for(int j = i ; j < impl_poll->nsock ; j++)
+    for(unsigned int j = i ; j < (unsigned int)impl_poll->nsock ; j++)
     {
       impl_poll->fds[j].fd = impl_poll->fds[j + 1].fd;
       impl_poll->fds[j].events = impl_poll->fds[j + 1].events;
