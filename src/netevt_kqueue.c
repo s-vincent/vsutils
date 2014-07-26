@@ -10,10 +10,10 @@
 
 #include "netevt_kqueue.h"
 
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__) || defined(__FreeBSD_kernel__)
 
 /* some typedef for *BSD */ 
-#ifndef __APPLE__ && !defined(__BSD_VISIBLE)_
+#if !defined(__APPLE__) && !defined(__BSD_VISIBLE)
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
