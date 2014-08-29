@@ -290,10 +290,10 @@ int thread_dispatcher_push(thread_dispatcher obj, struct thread_task* task)
     int first = list_head_is_empty(&obj->tasks);
     list_head_add_tail(&obj->tasks, &t->list);
 
-    /* notify threads that wait about a task */
+    /* notify one of worker threads that wait about a task */
     if(first)
     {
-      if(pthread_cond_broadcast(&obj->cond_tasks) != 0)
+      if(pthread_cond_signal(&obj->cond_tasks) != 0)
       {
         /* it should happen only if cond_tasks is 
          * not initialized
