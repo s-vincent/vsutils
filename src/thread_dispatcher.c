@@ -324,7 +324,7 @@ int thread_dispatcher_pop(thread_dispatcher obj, struct thread_task* task)
   ts.tv_nsec = 0;
 #endif
 
-  pthread_mutex_timedlock(&obj->mutex_tasks, &ts);
+  if(pthread_mutex_timedlock(&obj->mutex_tasks, &ts) == 0)
   {
     if(list_head_is_empty(&obj->tasks))
     {
@@ -343,10 +343,9 @@ int thread_dispatcher_pop(thread_dispatcher obj, struct thread_task* task)
       return -1;
     }
 
-    ret = 0;
-
     pos = obj->tasks.next;
     t = list_head_get(pos, struct thread_task, list);
+    ret = 0;
 
     /* fill task with thread_task data from list */
     task->data = t->data;
@@ -355,8 +354,8 @@ int thread_dispatcher_pop(thread_dispatcher obj, struct thread_task* task)
 
     /* remove task from list */
     list_head_remove(&obj->tasks, &t->list);
+    pthread_mutex_unlock(&obj->mutex_tasks);
   }
-  pthread_mutex_unlock(&obj->mutex_tasks);
 
   if(ret == 0)
   {
