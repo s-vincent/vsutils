@@ -387,7 +387,7 @@ int net_make_sockaddr(int family, const char* address, uint16_t port,
 
   if(res)
   {
-    memcpy(&addr, p->ai_addr, p->ai_addrlen);
+    memcpy(addr, p->ai_addr, p->ai_addrlen);
     *addr_size = p->ai_addrlen;
     freeaddrinfo(res);
     ret = 0;
