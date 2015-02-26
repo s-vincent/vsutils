@@ -367,7 +367,6 @@ int net_make_sockaddr(int family, const char* address, uint16_t port,
 {
   struct addrinfo hints;
   struct addrinfo* res = NULL;
-  struct addrinfo* p = NULL;
   char service[8];
   int ret = 0;
 
@@ -387,8 +386,8 @@ int net_make_sockaddr(int family, const char* address, uint16_t port,
 
   if(res)
   {
-    memcpy(addr, p->ai_addr, p->ai_addrlen);
-    *addr_size = p->ai_addrlen;
+    memcpy(addr, res->ai_addr, res->ai_addrlen);
+    *addr_size = res->ai_addrlen;
     freeaddrinfo(res);
     ret = 0;
   }
