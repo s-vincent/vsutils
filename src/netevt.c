@@ -113,13 +113,13 @@ struct netevt* netevt_new(enum netevt_method method)
         {
             m = NETEVT_KQUEUE;
         }
-        else if(netevt_is_method_supported(NETEVT_SELECT))
-        {
-            m = NETEVT_SELECT;
-        }
         else if(netevt_is_method_supported(NETEVT_POLL))
         {
             m = NETEVT_POLL;
+        }
+        else if(netevt_is_method_supported(NETEVT_SELECT))
+        {
+            m = NETEVT_SELECT;
         }
         else
         {
