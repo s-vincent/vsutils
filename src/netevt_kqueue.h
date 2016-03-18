@@ -25,6 +25,7 @@
 #define VSUTILS_NETEVT_KQUEUE_H
 
 #include "netevt.h"
+#include "netevt_impl.h"
 
 /**
  * \brief Initialize netevt_impl structure with kqueue implementation.

@@ -128,7 +128,7 @@ int main(int argc, char** argv)
     }
     else
     {
-      for(unsigned int i = 0 ; i < ret ; i++)
+      for(int i = 0 ; i < ret ; i++)
       {
         if(evts[i].state & NETEVT_STATE_READ)
         {

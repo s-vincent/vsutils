@@ -44,7 +44,7 @@ int opencl_get_program_from_file(cl_context context, const char* file_path,
 
 /**
  * \brief Retrieves OpenCL file content.
- * \param file path of the OpenCL file.
+ * \param file_path path of the OpenCL file.
  * \param program pointer that will handle file content (dynamically allocated).
  * \param program_size size of the file content.
  * \return 0 if success, negative integer (errno) otherwise.

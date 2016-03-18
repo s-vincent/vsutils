@@ -96,33 +96,6 @@ struct netevt_event
 };
 
 /**
- * \struct netevt_impl
- * \brief Event method specific (select, poll, ...) implementation.
- */
-struct netevt_impl
-{
-  /**
-   * \brief Wait network events.
-   */
-  int (*wait)(struct netevt_impl* impl, netevt obj, int timeout,
-      struct netevt_event* events, size_t nb_events);
-
-  /**
-   * \brief Add a socket.
-   */
-  int (*add_socket)(struct netevt_impl* impl, netevt obj,
-      struct netevt_socket* sock, int event_mask);
-
-  /**
-   * \brief Remove a socket.
-   */
-  int (*remove_socket)(struct netevt_impl* impl, netevt obj,
-      struct netevt_socket* sock);
-
-  void* priv; /**< Private data for the implementation. */  
-};
-
-/**
  * \brief Returns whether or not the method is supported.
  * \param method method to test if supported.
  * \return 1 if method is supported, 0 otherwise.

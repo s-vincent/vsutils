@@ -25,6 +25,7 @@
 #define VSUTILS_NETEVT_POLL_H
 
 #include "netevt.h"
+#include "netevt_impl.h"
 
 /**
  * \brief Initialize netevt_impl structure with poll implementation.

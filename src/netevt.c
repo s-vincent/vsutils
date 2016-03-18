@@ -32,6 +32,7 @@
 #endif
 
 #include "netevt.h"
+#include "netevt_impl.h"
 #include "netevt_select.h"
 #include "netevt_poll.h"
 #include "netevt_epoll.h"
