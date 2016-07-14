@@ -96,7 +96,7 @@ void dbg_print_hexa(const char* f, int line, const char* buf, size_t len,
 
   for(i = 0 ; i < len ; i++)
   {
-    fprintf(stderr, "%02x ", (unsigned char)buf[i]);
+    fprintf(stderr, "%02x ", (unsigned int)buf[i]);
   }
 
   fprintf(stderr, "\n");

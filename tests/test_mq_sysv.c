@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
     (void)argc;
     (void)argv;
-    
+
     test_ipc_print_mq();
 
     if(best_type != type)
@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     {
         return EXIT_SUCCESS;
     }
-    
+
     return EXIT_FAILURE;
 }
 

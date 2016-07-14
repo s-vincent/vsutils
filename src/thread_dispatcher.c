@@ -43,7 +43,7 @@ static int priv_pthread_mutex_timedlock(pthread_mutex_t* mutex,
   do
   {
     ret = pthread_mutex_trylock(mutex);
-  
+
     if(ret == EBUSY)
     {
       gettimeofday(&tv, NULL);
@@ -248,7 +248,7 @@ void thread_dispatcher_free(thread_dispatcher* obj)
     /* tell the threads that they have to quit */
     (*obj)->run = -1;
     pthread_cond_broadcast(&(*obj)->cond_start);
-  } 
+  }
   pthread_mutex_unlock(&(*obj)->mutex_start);
 
   /* wait for the threads */
@@ -264,7 +264,7 @@ void thread_dispatcher_free(thread_dispatcher* obj)
   pthread_mutex_destroy(&(*obj)->mutex_tasks);
   pthread_cond_destroy(&(*obj)->cond_tasks);
   pthread_mutex_destroy(&(*obj)->mutex_start);
-  pthread_cond_destroy(&(*obj)->cond_start); 
+  pthread_cond_destroy(&(*obj)->cond_start);
 
   free(*obj);
   *obj = NULL;
@@ -295,7 +295,7 @@ int thread_dispatcher_push(thread_dispatcher obj, struct thread_task* task)
     {
       if(pthread_cond_signal(&obj->cond_tasks) != 0)
       {
-        /* it should happen only if cond_tasks is 
+        /* it should happen only if cond_tasks is
          * not initialized
          */
         pthread_mutex_unlock(&obj->mutex_tasks);

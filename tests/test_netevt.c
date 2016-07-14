@@ -106,10 +106,10 @@ int main(int argc, char** argv)
   }
 
   g_run = 1;
-  
+
   while(g_run)
   {
-    size_t nb_evt = 32; 
+    size_t nb_evt = 32;
     struct netevt_event evts[nb_evt];
     int ret = -1;
     ssize_t nb = 0;

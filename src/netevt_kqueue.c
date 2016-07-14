@@ -28,7 +28,7 @@
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__) || defined(__FreeBSD_kernel__)
 
-/* some typedef for *BSD */ 
+/* some typedef for *BSD */
 #if !defined(__APPLE__) && !defined(__BSD_VISIBLE)
 typedef unsigned short u_short;
 typedef unsigned char u_char;
@@ -180,7 +180,7 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
         else if(j == 2)
         {
           evt = EVFILT_READ;
-          extra = EV_OOBAND; 
+          extra = EV_OOBAND;
           state = NETEVT_STATE_OTHER;
         }
 
@@ -248,7 +248,7 @@ static int netevt_kqueue_add_socket(struct netevt_impl* impl, netevt obj,
   }
 
   EV_SET(&impl_kqueue->mntrs[impl_kqueue->fds_next], sock->sock, evt,
-      EV_ADD | EV_ENABLE, extra, 0, sock); 
+      EV_ADD | EV_ENABLE, extra, 0, sock);
   impl_kqueue->fds_next++;
   impl_kqueue->nsock++;
 
@@ -277,7 +277,7 @@ static int netevt_kqueue_remove_socket(struct netevt_impl* impl, netevt obj,
     {
       EV_SET(&impl_kqueue->mntrs[i], sock->sock,
           EVFILT_READ | EVFILT_WRITE, EV_DELETE, 0,
-          0, sock); 
+          0, sock);
       kevent(impl_kqueue->kq, &impl_kqueue->mntrs[i], 1, NULL, 0, NULL);
       break;
     }

@@ -105,6 +105,8 @@ int ipc_mq_is_supported(enum ipc_mq_type type)
             break;
     }
 #endif
+
+    return 0;
 }
 
 enum ipc_mq_type ipc_mq_get_best_type(void)

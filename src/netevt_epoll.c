@@ -232,7 +232,7 @@ static int netevt_epoll_add_socket(struct netevt_impl* impl, netevt obj,
     evt.events |= EPOLLPRI;
   }
 
-  ret = epoll_ctl(impl_epoll->efd, EPOLL_CTL_ADD, sock->sock, &evt); 
+  ret = epoll_ctl(impl_epoll->efd, EPOLL_CTL_ADD, sock->sock, &evt);
 
   if(ret != -1)
   {

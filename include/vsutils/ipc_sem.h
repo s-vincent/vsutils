@@ -106,7 +106,7 @@ int ipc_sem_is_supported(enum ipc_sem_type type);
  * \brief Returns "best" semaphore type for the current OS.
  * \return Best semaphore type for the current OS.
  */
-enum ipc_sem_type ipc_sem_get_best_type();
+enum ipc_sem_type ipc_sem_get_best_type(void);
 
 #ifdef __cplusplus
 }

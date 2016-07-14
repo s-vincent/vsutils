@@ -193,7 +193,7 @@ char* sys_s_strncpy(char* dest, const char* src, size_t n);
 int sys_s_snprintf(char* str, size_t size, const char* format, ...);
 
 /**
- * \brief Secure version of memset that ensure doing its work even if the 
+ * \brief Secure version of memset that ensure doing its work even if the
  * compiler aggressively optimizes the code.
  * \param src source pointer.
  * \param c set constant byte to set.

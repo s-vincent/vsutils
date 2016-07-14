@@ -76,7 +76,7 @@ ipc_mq ipc_mq_sysv_new(void* value, int mode, int perm)
     {
         return NULL;
     }
-   
+
     memset(ret, 0x00, sizeof(struct ipc_mq) + sizeof(struct ipc_mq_sysv));
     ret->type = IPC_MQ_SYSV;
     ret->free = ipc_mq_sysv_free;
@@ -87,7 +87,7 @@ ipc_mq ipc_mq_sysv_new(void* value, int mode, int perm)
     priv->msqid = msqid;
     priv->key = key;
     priv->max_msg_size = attr.msg_qbytes > 8192 ? 8192 : attr.msg_qbytes;
-    
+
     return ret;
 }
 
@@ -166,7 +166,7 @@ void ipc_mq_sysv_free(ipc_mq* obj, int unlink)
 size_t ipc_mq_sysv_get_max_msg_size(ipc_mq obj)
 {
     (void)obj;
-    
+
     errno = ENOSYS;
     return 0;
 }

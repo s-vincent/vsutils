@@ -12,9 +12,9 @@
 
 void test_ipc_print_shm(void)
 {
-    fprintf(stdout, "SystemV SHM: %ssupported\n", 
+    fprintf(stdout, "SystemV SHM: %ssupported\n",
             ipc_shm_is_supported(IPC_SHM_SYSV) ? "" : "not ");
-    fprintf(stdout, "POSIX SHM: %ssupported\n", 
+    fprintf(stdout, "POSIX SHM: %ssupported\n",
             ipc_shm_is_supported(IPC_SHM_POSIX) ? "" : "not ");
 }
 
@@ -23,7 +23,7 @@ int test_ipc_shm(enum ipc_shm_type type, void* arg)
     ipc_shm shm = NULL;
     const size_t shm_size = 1024;
     pid_t p = -1;
-  
+
     if(!ipc_shm_is_supported(type))
     {
         fprintf(stderr, "Shared memory type %d not supported!\n", type);
@@ -67,7 +67,7 @@ int test_ipc_shm(enum ipc_shm_type type, void* arg)
         char* mem = NULL;
 
         shm = ipc_shm_new(type, arg, O_CREAT | O_RDWR, 0700, shm_size);
-        
+
         if(!shm)
         {
             perror("ipc_shm_new");
@@ -80,7 +80,6 @@ int test_ipc_shm(enum ipc_shm_type type, void* arg)
         fprintf(stdout, "[SON] %s\n", mem);
     }
 
-   
     ipc_shm_free(&shm, 1);
     return 0;
 }

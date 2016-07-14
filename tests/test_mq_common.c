@@ -11,9 +11,9 @@
 
 void test_ipc_print_mq(void)
 {
-    fprintf(stdout, "SystemV MQ: %ssupported\n", 
+    fprintf(stdout, "SystemV MQ: %ssupported\n",
             ipc_mq_is_supported(IPC_MQ_SYSV) ? "" : "not ");
-    fprintf(stdout, "POSIX MQ: %ssupported\n", 
+    fprintf(stdout, "POSIX MQ: %ssupported\n",
             ipc_mq_is_supported(IPC_MQ_POSIX) ? "" : "not ");
 }
 
@@ -23,7 +23,7 @@ int test_ipc_mq(enum ipc_mq_type type, void* arg)
     struct ipc_mq_data* input = NULL;
     struct ipc_mq_data* output = NULL;
     size_t msg_size = 0;
-  
+
     if(!ipc_mq_is_supported(type))
     {
         fprintf(stderr, "MQ type %d not supported!\n", type);
@@ -39,12 +39,12 @@ int test_ipc_mq(enum ipc_mq_type type, void* arg)
         free(output);
         return -1;
     }
-   
+
     msg_size = ipc_mq_get_max_msg_size(mq);
     fprintf(stdout, "Size of message: %lu\n", msg_size);
     input = malloc(sizeof(struct ipc_mq_data) + msg_size);
     output = malloc(sizeof(struct ipc_mq_data) + msg_size);
-    
+
     if(!input || !output)
     {
         free(input);

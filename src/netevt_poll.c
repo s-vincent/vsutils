@@ -91,9 +91,7 @@ static int netevt_poll_wait(struct netevt_impl* impl, netevt obj, int timeout,
   /* -1 is infinite */
   int timeout_ms = timeout != -1 ? timeout * 1000 : -1;
 
-  printf("poll\n");
   ret = poll(impl_poll->fds, impl_poll->nsock, timeout_ms);
-  printf("end poll %d\n", ret);
 
   if(ret == -1)
   {
@@ -119,7 +117,6 @@ static int netevt_poll_wait(struct netevt_impl* impl, netevt obj, int timeout,
           list);
       int already = 0;
 
-      printf("%d %d %d\n", s->sock, idx, impl_poll->fds[idx].revents);
       if(impl_poll->fds[idx].revents == 0)
       {
         /* no events to go the next */
@@ -164,7 +161,6 @@ static int netevt_poll_wait(struct netevt_impl* impl, netevt obj, int timeout,
         {
           if(!already)
           {
-      printf("Set %d %d\n", s->sock, state);
             events[nb].socket = *s;
             events[nb].state = state;
             already = 1;

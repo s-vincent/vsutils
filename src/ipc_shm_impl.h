@@ -41,7 +41,7 @@ struct ipc_shm
      * \brief Shared memory data.
      */
     void* data;
-   
+
     /**
      * \brief Shared memory size.
      */

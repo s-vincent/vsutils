@@ -76,7 +76,7 @@ ipc_shm ipc_shm_sysv_new(void* value, int mode, int perm, size_t size)
     {
         return NULL;
     }
-   
+
     memset(ret, 0x00, sizeof(struct ipc_shm) + sizeof(struct ipc_shm_sysv));
     ret->type = IPC_SHM_SYSV;
     ret->free = ipc_shm_sysv_free;
@@ -87,7 +87,7 @@ ipc_shm ipc_shm_sysv_new(void* value, int mode, int perm, size_t size)
     priv = (struct ipc_shm_sysv*)&ret->priv;
     priv->shmid = shmid;
     priv->key = key;
-    
+
     return ret;
 }
 

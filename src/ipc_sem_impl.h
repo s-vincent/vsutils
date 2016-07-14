@@ -36,7 +36,7 @@ struct ipc_sem
      * \brief Semaphore type.
      */
     enum ipc_sem_type type;
-    
+
     /**
      * \brief Function to free the object.
      */

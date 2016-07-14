@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 	/* remove one element */
 	list_head_remove(&list, &el->list);
 	/* remove from the list does not mean free it so do not forget to free the
-	 * element (if it was dynamically allocated) 
+	 * element (if it was dynamically allocated)
 	 */
 	free(el);
 

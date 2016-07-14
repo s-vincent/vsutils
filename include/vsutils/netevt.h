@@ -177,13 +177,13 @@ struct list_head* netevt_get_sockets_list(netevt obj);
  * \brief Print in a file some information about network event manager.
  * \param obj network event manager.
  * \param output output file.
- */ 
+ */
 void netevt_fprint_info(netevt obj, FILE* output);
 
 /**
  * \brief Print in stdout some information about network event manager.
  * \param obj network event manager.
- */ 
+ */
 void netevt_print_info(netevt obj);
 
 #endif /* VSUTILS_NETEVT_H */

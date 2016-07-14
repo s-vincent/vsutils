@@ -52,7 +52,7 @@ int main(int argc, char** argv)
   if(!th)
   {
     fprintf(stderr, "Failed to create dispatcher errno=%d\n",
-        errno); 
+        errno);
     exit(EXIT_FAILURE);
   }
 

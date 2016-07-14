@@ -77,7 +77,7 @@
  *     struct element* e = list_head_get(pos, struct element, list);
  *     fprintf(stdout, "Id: %d\n", e->id);
  * }
- * 
+ *
  * list_head_remove(&list, &el->list);
  * free(el);
  * fprintf(stdout, "Size: %u\n", list_head_size(&list));
@@ -155,7 +155,7 @@ static inline void list_head_init(struct list_head* list)
  * show 3, 2, 1.
  */
 static inline void list_head_add(struct list_head* list,
-		struct list_head* item) 
+		struct list_head* item)
 {
 	struct list_head* next = list->next;
 	next->prev = item;

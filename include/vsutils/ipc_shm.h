@@ -96,7 +96,7 @@ int ipc_shm_is_supported(enum ipc_shm_type type);
  * \brief Returns "best" shared memory type for the current OS.
  * \return Best shared memory type for the current OS.
  */
-enum ipc_shm_type ipc_shm_get_best_type();
+enum ipc_shm_type ipc_shm_get_best_type(void);
 
 #ifdef __cplusplus
 }

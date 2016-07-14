@@ -421,9 +421,9 @@ int net_ipv6_address_is_tunneled(const struct in6_addr* addr)
 {
   static const uint8_t addr_6to4[2] = {0x20, 0x02};
   static const uint8_t addr_teredo[4] = {0x20, 0x01, 0x00, 0x00};
-                        
+
   /* 6to4 or teredo address ? */
-  if(!memcmp(addr->s6_addr, addr_6to4, 2) || 
+  if(!memcmp(addr->s6_addr, addr_6to4, 2) ||
       !memcmp(addr->s6_addr, addr_teredo, 4))
   {
     return 1;

@@ -20,9 +20,9 @@
 
 void test_ipc_print_sem(void)
 {
-    fprintf(stdout, "SystemV semaphore: %ssupported\n", 
+    fprintf(stdout, "SystemV semaphore: %ssupported\n",
             ipc_sem_is_supported(IPC_SEM_SYSV) ? "" : "not ");
-    fprintf(stdout, "POSIX semaphore: %ssupported\n", 
+    fprintf(stdout, "POSIX semaphore: %ssupported\n",
             ipc_sem_is_supported(IPC_SEM_POSIX) ? "" : "not ");
 }
 
@@ -33,13 +33,13 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
     struct tm* timeinfo = NULL;
     time_t timeo;
     char buf[256];
-  
+
     if(!ipc_sem_is_supported(type))
     {
         fprintf(stderr, "Semaphore type %d not supported!\n", type);
         return -1;
     }
-    
+
     sem = ipc_sem_new(type, arg, O_CREAT | O_RDWR, 0700, 1);
     if(!sem)
     {
@@ -62,15 +62,15 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
         /* father */
         sleep(1);
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         fprintf(stdout, "%s[FATHER] Try to lock semaphore\n", buf);
         ipc_sem_lock(sem);
-        
+
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -78,7 +78,7 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
         ipc_sem_unlock(sem);
 
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -87,7 +87,7 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
         /* wait son termination */
         wait(&status);
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -98,7 +98,7 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
     {
         /* son */
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -106,7 +106,7 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
         ipc_sem_lock(sem);
 
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
@@ -115,13 +115,13 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
         ipc_sem_unlock(sem);
 
         time(&timeo);
-        timeinfo = localtime(&timeo); 
+        timeinfo = localtime(&timeo);
         sprintf(buf, "[%d %d %d %d:%d:%d]", timeinfo->tm_mday,
                 timeinfo->tm_mon + 1, timeinfo->tm_year + 1900,
                 timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
         fprintf(stdout, "%s[SON] Semaphore unlocked\n", buf);
     }
-    
+
     ipc_sem_free(&sem, 1);
     return 0;
 }

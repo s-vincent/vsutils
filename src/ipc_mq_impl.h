@@ -56,11 +56,11 @@ struct ipc_mq
      * \brief Function to receive a message from the queue.
      */
     int (*recv)(ipc_mq, struct ipc_mq_data*, size_t data_size);
-   
+
     /**
      * \brief Private implementation.
      */
-    char priv[]; 
+    char priv[];
 };
 
 #endif /* IPC_MQ_IMPL_H */

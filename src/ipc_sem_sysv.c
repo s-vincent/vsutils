@@ -84,7 +84,7 @@ ipc_sem ipc_sem_sysv_new(void* value, int mode, int perm, unsigned int init)
     priv = (struct ipc_sem_sysv*)&ret->priv;
     priv->semid = semid;
     priv->key = key;
-    
+
     return ret;
 }
 
@@ -108,12 +108,12 @@ int ipc_sem_sysv_lock(ipc_sem obj)
 {
     struct ipc_sem_sysv* priv = (struct ipc_sem_sysv*)&obj->priv;
     struct sembuf buf;
-    
+
     buf.sem_num = 0;
     /* lock so decrement */
-    buf.sem_op = -1; 
+    buf.sem_op = -1;
     buf.sem_flg = 0;
-  
+
     return semop(priv->semid, &buf, 1);
 }
 
@@ -122,12 +122,12 @@ int ipc_sem_sysv_lock_timed(ipc_sem obj, const struct timespec* timeout)
 #ifdef _GNU_SOURCE
     struct ipc_sem_sysv* priv = (struct ipc_sem_sysv*)&obj->priv;
     struct sembuf buf;
-    
+
     buf.sem_num = 0;
     /* lock so decrement */
-    buf.sem_op = -1; 
+    buf.sem_op = -1;
     buf.sem_flg = 0;
-  
+
     return semtimedop(priv->semid, &buf, 1, timeout);
 #else
     (void)obj;
@@ -135,18 +135,18 @@ int ipc_sem_sysv_lock_timed(ipc_sem obj, const struct timespec* timeout)
     errno = ENOSYS;
     return -1;
 #endif
-} 
+}
 
 int ipc_sem_sysv_unlock(ipc_sem obj)
 {
     struct ipc_sem_sysv* priv = (struct ipc_sem_sysv*)&obj->priv;
     struct sembuf buf;
-    
+
     buf.sem_num = 0;
     /* unlock so increment */
-    buf.sem_op = 1; 
+    buf.sem_op = 1;
     buf.sem_flg = 0;
-  
+
     return semop(priv->semid, &buf, 1);
 }
 

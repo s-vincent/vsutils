@@ -84,7 +84,7 @@
 #endif
 
 /* extract the "AIX" flag from compiler */
-#ifdef _AIX 
+#ifdef _AIX
 /**
  * \def AIX
  * \brief AIX operating system.

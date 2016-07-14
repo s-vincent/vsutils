@@ -128,7 +128,7 @@ size_t ipc_mq_posix_get_max_msg_size(ipc_mq obj)
 int ipc_mq_posix_send(ipc_mq obj, const struct ipc_mq_data* data, size_t data_size)
 {
     struct ipc_mq_posix* priv = NULL;
-    
+
     if(!obj || !data || data_size == 0)
     {
         errno = EINVAL;
@@ -136,7 +136,7 @@ int ipc_mq_posix_send(ipc_mq obj, const struct ipc_mq_data* data, size_t data_si
     }
 
     priv = (struct ipc_mq_posix*)&obj->priv;
-    
+
     return mq_send(priv->mq, data->data, data_size, (unsigned int)data->priv);
 }
 

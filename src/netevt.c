@@ -132,7 +132,7 @@ struct netevt* netevt_new(enum netevt_method method)
     {
         return NULL;
     }
-    
+
     ret = malloc(sizeof(struct netevt));
 
     if(!ret)
@@ -200,7 +200,7 @@ int netevt_add_socket(netevt obj, int sock, int event_mask, void* data)
     p->sock = sock;
     getsockname(p->sock, (struct sockaddr*)&p->local, &addr_size);
     p->data = data;
-    
+
     if(obj->impl.add_socket(&obj->impl, obj, p, event_mask) != 0)
     {
         free(p);
@@ -275,7 +275,7 @@ struct netevt_socket* netevt_get_sockets(netevt obj, size_t* sockets_nb)
     struct list_head* pos = NULL;
     struct list_head* tmp = NULL;
     unsigned int i = 0;
-    
+
     if(obj->nb_sockets)
     {
         ret = malloc(sizeof(struct netevt_socket) * obj->nb_sockets);

@@ -55,7 +55,7 @@ struct ipc_mq_data
     /**
      * \brief Data.
      */
-    char data[]; 
+    char data[];
 };
 
 /**
@@ -123,7 +123,7 @@ int ipc_mq_is_supported(enum ipc_mq_type type);
  * \brief Returns "best" message queue type for the current OS.
  * \return Best message queue type for the current OS.
  */
-enum ipc_mq_type ipc_mq_get_best_type();
+enum ipc_mq_type ipc_mq_get_best_type(void);
 
 #ifdef __cplusplus
 }
