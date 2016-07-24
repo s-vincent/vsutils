@@ -18,7 +18,7 @@
  * \file netevt_select.h
  * \brief Network event select implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #ifndef VSUTILS_NETEVT_SELECT_H

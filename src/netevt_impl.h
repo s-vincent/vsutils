@@ -29,6 +29,12 @@ struct netevt_impl
       struct netevt_socket* sock, int event_mask);
 
   /**
+   * \brief Modify a socket.
+   */
+  int (*set_socket)(struct netevt_impl* impl, netevt obj,
+      struct netevt_socket* sock, int event_mask);
+
+  /**
    * \brief Remove a socket.
    */
   int (*remove_socket)(struct netevt_impl* impl, netevt obj,

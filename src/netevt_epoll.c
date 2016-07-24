@@ -18,7 +18,7 @@
  * \file netevt_epoll.c
  * \brief Network event epoll implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #include <stdlib.h>
@@ -173,6 +173,7 @@ static int netevt_epoll_wait(struct netevt_impl* impl, netevt obj, int timeout,
           if(!already)
           {
             events[nb].socket = *((struct netevt_socket*)impl_epoll->events[i].data.ptr);
+            events[nb].ptr = ((struct netevt_socket*)impl_epoll->events[i].data.ptr);
             events[nb].state = state;
             already = 1;
           }
@@ -243,6 +244,50 @@ static int netevt_epoll_add_socket(struct netevt_impl* impl, netevt obj,
 }
 
 /**
+ * \brief Modify a socket.
+ * \param impl network event implementation.
+ * \param obj network event manager.
+ * \param sock socket descriptor.
+ * \param event_mask combination of NETEVT_STATE_* flag (read, write, ...).
+ * \return 0 if success, -1 otherwise.
+ */
+static int netevt_epoll_set_socket(struct netevt_impl* impl, netevt obj,
+    struct netevt_socket* sock, int event_mask)
+{
+  int ret = 0;
+  struct netevt_epoll* impl_epoll = impl->priv;
+  struct epoll_event evt;
+
+  (void)obj;
+
+  if(sock->sock > NET_SFD_SETSIZE)
+  {
+    return -1;
+  }
+
+  memset(&evt, 0x00, sizeof(struct epoll_event));
+  evt.events = 0;
+  evt.data.ptr = sock;
+
+  if(event_mask & NETEVT_STATE_READ)
+  {
+    evt.events |= EPOLLIN;
+  }
+  if(event_mask & NETEVT_STATE_WRITE)
+  {
+    evt.events |= EPOLLOUT;
+  }
+  if(event_mask & NETEVT_STATE_OTHER)
+  {
+    evt.events |= EPOLLPRI;
+  }
+
+  ret = epoll_ctl(impl_epoll->efd, EPOLL_CTL_MOD, sock->sock, &evt);
+
+  return ret;
+}
+
+/**
  * \brief Remove a socket from the manager.
  * \param impl network event implementation.
  * \param obj network event manager.
@@ -276,6 +321,7 @@ int netevt_epoll_init(struct netevt_impl* impl)
   {
     impl->wait = netevt_epoll_wait;
     impl->add_socket = netevt_epoll_add_socket;
+    impl->set_socket = netevt_epoll_set_socket;
     impl->remove_socket = netevt_epoll_remove_socket;
     impl->priv = impl_epoll;
     ret = 0;

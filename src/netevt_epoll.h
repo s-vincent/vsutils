@@ -18,7 +18,7 @@
  * \file netevt_epoll.h
  * \brief Network event epoll implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #ifndef VSUTILS_NETEVT_EPOLL_H

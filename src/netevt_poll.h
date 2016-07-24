@@ -18,7 +18,7 @@
  * \file netevt_poll.h
  * \brief Network event poll implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #ifndef VSUTILS_NETEVT_POLL_H

@@ -18,7 +18,7 @@
  * \file netevt.h
  * \brief Network event manager.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #ifndef VSUTILS_NETEVT_H
@@ -91,7 +91,8 @@ struct netevt_socket
  */
 struct netevt_event
 {
-  struct netevt_socket socket; /**< Network socket. */
+  struct netevt_socket socket; /**< Copy of network socket. */
+  struct netevt_socket* ptr; /**< Pointer from the network manager. */
   int state; /**< Event state. */
 };
 
@@ -126,6 +127,25 @@ void netevt_free(netevt* obj);
 int netevt_add_socket(netevt obj, int sock, int event_mask, void* data);
 
 /**
+ * \brief Modify a socket.
+ * \param obj network event manager.
+ * \param sock socket descriptor.
+ * \param event_mask combination of NETEVT_STATE_* flag (read, write, ...).
+ * \return 0 if success, -1 otherwise.
+ */
+int netevt_set_socket(netevt obj, int sock, int event_mask);
+
+/**
+ * \brief Modify a socket.
+ * \param obj network event manager.
+ * \param sock netevt_socket descriptor.
+ * \param event_mask combination of NETEVT_STATE_* flag (read, write, ...).
+ * \return 0 if success, -1 otherwise.
+ */
+int netevt_set_netevt_socket(netevt obj, struct netevt_socket* sock,
+    int event_mask);
+
+/**
  * \brief Remove a socket from the manager.
  * \param obj network event manager.
  * \param sock socket descriptor.
@@ -148,7 +168,8 @@ int netevt_remove_all_sockets(netevt obj);
  * \param nb_events number of elements in events array.
  * \return 0 if timeout, number of elements notified if success and -1 if error.
  */
-int netevt_wait(netevt obj, int timeout, struct netevt_event* events, size_t nb_events);
+int netevt_wait(netevt obj, int timeout, struct netevt_event* events,
+    size_t nb_events);
 
 /**
  * \brief Get number of sockets registered in the manager.
@@ -161,7 +182,8 @@ int netevt_get_nb_sockets(netevt obj);
  * \brief Returns copy array of netevt_socket.
  * \param obj network event manager.
  * \param sockets_nb number of element in the returning array.
- * \return Valid netevt_socket array, NULL if no sockets or if memory problem (check errno).
+ * \return valid netevt_socket array, NULL if no sockets/memory problem (check
+ * errno to know).
  */
 struct netevt_socket* netevt_get_sockets(netevt obj, size_t* sockets_nb);
 

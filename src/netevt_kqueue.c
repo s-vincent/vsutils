@@ -18,7 +18,7 @@
  * \file netevt_kqueue.c
  * \brief Network event kqueue implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #include <stdlib.h>
@@ -190,6 +190,7 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
           if(!already)
           {
             events[nb].socket = *((struct netevt_socket*)impl_kqueue->trgrd[i].udata);
+            events[nb].ptr= (struct netevt_socket*)impl_kqueue->trgrd[i].udata;
             events[nb].state = state;
           }
           else
@@ -256,6 +257,58 @@ static int netevt_kqueue_add_socket(struct netevt_impl* impl, netevt obj,
 }
 
 /**
+ * \brief Modify a socket.
+ * \param impl network event implementation.
+ * \param obj network event manager.
+ * \param sock socket descriptor.
+ * \param event_mask combination of NETEVT_STATE_* flag (read, write, ...).
+ * \return 0 if success, -1 otherwise.
+ */
+static int netevt_kqueue_set_socket(struct netevt_impl* impl, netevt obj,
+    struct netevt_socket* sock, int event_mask)
+{
+  int ret = 0;
+  struct netevt_kqueue* impl_kqueue = impl->priv;
+  int evt = 0;
+  int extra = 0;
+
+  (void)obj;
+
+  if(event_mask & NETEVT_STATE_READ)
+  {
+    evt |= EVFILT_READ;
+  }
+  if(event_mask & NETEVT_STATE_WRITE)
+  {
+    evt |= EVFILT_WRITE;
+  }
+  if(event_mask & NETEVT_STATE_OTHER)
+  {
+    evt |= EVFILT_READ;
+    extra = EV_OOBAND;
+  }
+
+  for(i = 0 ; i < (int)NET_SFD_SETSIZE ; i++)
+  {
+    if(impl_kqueue->mntrs[i].ident == (uintptr_t)sock->sock)
+    {
+      EV_SET(&impl_kqueue->mntrs[i], sock->sock, evt,
+          EV_ADD | EV_ENABLE, extra, 0, sock);
+      ret = 0;
+      break;
+    }
+  }
+
+  if(i == NET_SFD_SETSIZE)
+  {
+    /* not found */
+    ret = -1;
+  }
+
+  return ret;
+}
+
+/**
  * \brief Remove a socket from the manager.
  * \param impl network event implementation.
  * \param obj network event manager.
@@ -313,6 +366,7 @@ int netevt_kqueue_init(struct netevt_impl* impl)
   {
     impl->wait = netevt_kqueue_wait;
     impl->add_socket = netevt_kqueue_add_socket;
+    impl->set_socket = netevt_kqueue_set_socket;
     impl->remove_socket = netevt_kqueue_remove_socket;
     impl->priv = impl_kqueue;
     ret = 0;

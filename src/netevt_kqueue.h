@@ -18,7 +18,7 @@
  * \file netevt_kqueue.h
  * \brief Network event kqueue implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #ifndef VSUTILS_NETEVT_KQUEUE_H

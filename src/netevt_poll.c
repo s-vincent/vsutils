@@ -18,7 +18,7 @@
  * \file netevt_poll.c
  * \brief Network event poll implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #include <stdlib.h>
@@ -162,6 +162,7 @@ static int netevt_poll_wait(struct netevt_impl* impl, netevt obj, int timeout,
           if(!already)
           {
             events[nb].socket = *s;
+            events[nb].ptr = s;
             events[nb].state = state;
             already = 1;
           }
@@ -228,6 +229,56 @@ static int netevt_poll_add_socket(struct netevt_impl* impl, netevt obj,
 }
 
 /**
+ * \brief Modify a socket.
+ * \param impl network event implementation.
+ * \param obj network event manager.
+ * \param sock socket descriptor.
+ * \param event_mask combination of NETEVT_STATE_* flag (read, write, ...).
+ * \return 0 if success, -1 otherwise.
+ */
+static int netevt_poll_set_socket(struct netevt_impl* impl, netevt obj,
+    struct netevt_socket* sock, int event_mask)
+{
+  int ret = 0;
+  struct netevt_poll* impl_poll = impl->priv;
+  unsigned int i = 0;
+
+  (void)obj;
+
+  for(i = 0 ; i < NET_SFD_SETSIZE ; i++)
+  {
+    if(impl_poll->fds[i].fd == sock->sock)
+    {
+      /* reset and modify the event mask */
+      impl_poll->fds[i].events = 0;
+
+      if(event_mask & NETEVT_STATE_READ)
+      {
+        impl_poll->fds[i].events |= POLLIN;
+      }
+      if(event_mask & NETEVT_STATE_WRITE)
+      {
+        impl_poll->fds[i].events |= POLLOUT;
+      }
+      if(event_mask & NETEVT_STATE_OTHER)
+      {
+        impl_poll->fds[i].events |= POLLPRI;
+      }
+      ret = 0;
+      break;
+    }
+  }
+
+  if(i == NET_SFD_SETSIZE)
+  {
+    /* not found */
+    ret = -1;
+  }
+
+  return ret;
+}
+
+/**
  * \brief Remove a socket from the manager.
  * \param impl network event implementation.
  * \param obj network event manager.
@@ -284,6 +335,7 @@ int netevt_poll_init(struct netevt_impl* impl)
   {
     impl->wait = netevt_poll_wait;
     impl->add_socket = netevt_poll_add_socket;
+    impl->set_socket = netevt_poll_set_socket;
     impl->remove_socket = netevt_poll_remove_socket;
     impl->priv = impl_poll;
     ret = 0;

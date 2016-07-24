@@ -18,7 +18,7 @@
  * \file netevt_select.c
  * \brief Network event select implementation.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #include <stdlib.h>
@@ -166,6 +166,7 @@ static int netevt_select_wait(struct netevt_impl* impl, netevt obj, int timeout,
           if(!already)
           {
             events[nb].socket = *s;
+            events[nb].ptr = s;
             events[nb].state = state;
           }
           else
@@ -225,6 +226,42 @@ static int netevt_select_add_socket(struct netevt_impl* impl, netevt obj,
 }
 
 /**
+ * \brief Modify a socket.
+ * \param impl network event implementation.
+ * \param obj network event manager.
+ * \param sock socket descriptor.
+ * \param event_mask combination of NETEVT_STATE_* flag (read, write, ...).
+ * \return 0 if success, -1 otherwise.
+ */
+static int netevt_select_set_socket(struct netevt_impl* impl, netevt obj,
+    struct netevt_socket* sock, int event_mask)
+{
+  int ret = 0;
+  struct netevt_select* impl_select = impl->priv;
+
+  (void)obj;
+
+  NET_SFD_CLR(sock->sock, &impl_select->fdsr);
+  NET_SFD_CLR(sock->sock, &impl_select->fdsw);
+  NET_SFD_CLR(sock->sock, &impl_select->fdse);
+
+  if(event_mask & NETEVT_STATE_READ)
+  {
+    NET_SFD_SET(sock->sock, &impl_select->fdsr);
+  }
+  if(event_mask & NETEVT_STATE_WRITE)
+  {
+    NET_SFD_SET(sock->sock, &impl_select->fdsw);
+  }
+  if(event_mask & NETEVT_STATE_OTHER)
+  {
+    NET_SFD_SET(sock->sock, &impl_select->fdse);
+  }
+
+  return ret;
+}
+
+/**
  * \brief Remove a socket from the manager.
  * \param impl network event implementation.
  * \param obj network event manager.
@@ -244,18 +281,9 @@ static int netevt_select_remove_socket(struct netevt_impl* impl, netevt obj,
     return -1;
   }
 
-  if(NET_SFD_ISSET(sock->sock, &impl_select->fdsr))
-  {
-    NET_SFD_CLR(sock->sock, &impl_select->fdsr);
-  }
-  if(NET_SFD_ISSET(sock->sock, &impl_select->fdsw))
-  {
-    NET_SFD_CLR(sock->sock, &impl_select->fdsw);
-  }
-  if(NET_SFD_ISSET(sock->sock, &impl_select->fdse))
-  {
-    NET_SFD_CLR(sock->sock, &impl_select->fdse);
-  }
+  NET_SFD_CLR(sock->sock, &impl_select->fdsr);
+  NET_SFD_CLR(sock->sock, &impl_select->fdsw);
+  NET_SFD_CLR(sock->sock, &impl_select->fdse);
 
   return ret;
 }
@@ -269,6 +297,7 @@ int netevt_select_init(struct netevt_impl* impl)
   {
     impl->wait = netevt_select_wait;
     impl->add_socket = netevt_select_add_socket;
+    impl->set_socket = netevt_select_set_socket;
     impl->remove_socket = netevt_select_remove_socket;
     impl->priv = impl_select;
     ret = 0;

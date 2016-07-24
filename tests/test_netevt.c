@@ -80,7 +80,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  sock = net_socket_create(IPPROTO_TCP, "127.0.0.1", 8022, 1, 1);
+  sock = net_socket_create(AF_INET, IPPROTO_TCP, "127.0.0.1", 8022, 1, 1);
 
   if(sock == -1)
   {
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
             socklen_t ss_len = sizeof(struct sockaddr_storage);
             int clt = 0;
 
-            fprintf(stdout, "Accept operation\n");
+            fprintf(stdout, "Accept operation %d\n", evts[i].socket.sock);
 
             clt = accept(sock, (struct sockaddr*)&ss, &ss_len);
 
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
           }
           else
           {
-            fprintf(stdout, "Read operation\n");
+            fprintf(stdout, "Read operation: %d\n", evts[i].socket.sock);
             fprintf(stdout, "Socket data: %s\n",
                 (char*)evts[i].socket.data);
 
@@ -168,23 +168,34 @@ int main(int argc, char** argv)
             }
             else if(nb == 0)
             {
-              fprintf(stderr, "Disconnected\n");
+              fprintf(stderr, "Disconnected: %d\n", evts[i].socket.sock);
               netevt_remove_socket(nevt, evts[i].socket.sock);
             }
             else
             {
               buf[nb] = 0x00;
-              fprintf(stdout, "Buf: %s\n", buf);
-              if(send(evts[i].socket.sock, buf, nb, 0) == -1)
-              {
-                fprintf(stderr, "Error send\n");
-              }
-              else
-              {
-                fprintf(stderr, "Send OK\n");
-              }
+              fprintf(stdout, "Received buf: %s\n", buf);
+
+              /* wants write */
+              netevt_set_socket(nevt, evts[i].socket.sock, NETEVT_STATE_READ | NETEVT_STATE_WRITE);
             }
           }
+        }
+        else if(evts[i].state & NETEVT_STATE_WRITE)
+        {
+          fprintf(stdout, "Ready to write\n");
+          char buf2[] = "OK received!";
+          if(send(evts[i].socket.sock, buf2, sizeof(buf2), 0) == -1)
+          {
+            fprintf(stderr, "Error send\n");
+          }
+          else
+          {
+            fprintf(stderr, "Send OK\n");
+          }
+
+          /* get back to only read state */
+          netevt_set_socket(nevt, evts[i].socket.sock, NETEVT_STATE_READ);
         }
       }
     }
