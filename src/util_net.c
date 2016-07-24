@@ -18,7 +18,7 @@
  * \file util_net.c
  * \brief Some helper network functions.
  * \author Sebastien Vincent
- * \date 2013
+ * \date 2013-2016
  */
 
 #ifdef HAVE_CONFIG_H
@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
@@ -278,8 +279,8 @@ void net_iovec_free_data(struct iovec* iov, size_t nb)
   }
 }
 
-int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
-    int reuse, int nodelay)
+int net_socket_create(enum address_family af, enum protocol_type protocol,
+    const char* addr, uint16_t port, int v6only, int reuse)
 {
   int sock = -1;
   struct addrinfo hints;
@@ -291,9 +292,9 @@ int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
   service[sizeof(service)-1] = 0x00;
 
   memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = (type == NET_TCP ? SOCK_STREAM : SOCK_DGRAM);
-  hints.ai_protocol = (type == NET_TCP ? IPPROTO_TCP : IPPROTO_UDP);
+  hints.ai_family = af;
+  hints.ai_socktype = (protocol == NET_TCP ? SOCK_STREAM : SOCK_DGRAM);
+  hints.ai_protocol = (protocol == NET_TCP ? IPPROTO_TCP : IPPROTO_UDP);
   hints.ai_flags = AI_PASSIVE;
 
   if(getaddrinfo(addr, service, &hints, &res) != 0)
@@ -316,13 +317,8 @@ int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
       setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int));
     }
 
-    if (type == NET_TCP && nodelay)
-    {
-      setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(int));
-    }
-
     /* accept IPv6 and IPv4 on the same socket */
-    on = 0;
+    on = v6only ? 1 : 0;
     setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(int));
 
     if(bind(sock, p->ai_addr, p->ai_addrlen) == -1)
@@ -362,7 +358,7 @@ ssize_t net_sock_writev(int fd, const struct iovec *iov, size_t iovcnt,
 #endif
 }
 
-int net_make_sockaddr(int family, const char* address, uint16_t port,
+int net_sockaddr_make(int family, const char* address, uint16_t port,
     struct sockaddr_storage* addr, socklen_t* addr_size)
 {
   struct addrinfo hints;
@@ -394,6 +390,79 @@ int net_make_sockaddr(int family, const char* address, uint16_t port,
   else
   {
     ret = -1;
+  }
+
+  return ret;
+}
+
+socklen_t net_sockaddr_len(const struct sockaddr_storage* addr)
+{
+  socklen_t ret = 0;
+
+  switch(addr->ss_family)
+  {
+  case AF_INET:
+    ret = sizeof(struct sockaddr_in);
+    break;
+  case AF_INET6:
+    ret = sizeof(struct sockaddr_in6);
+    break;
+  default:
+    ret = 0;
+    break;
+  }
+
+  return ret;
+}
+
+int net_sockaddr_str(const struct sockaddr_storage* addr, char* str,
+    socklen_t str_size, uint16_t* port)
+{
+  int ret = -1;
+  struct sockaddr_in* in = NULL;
+  struct sockaddr_in6* in6 = NULL;
+
+  switch(addr->ss_family)
+  {
+  case AF_INET:
+    if(str && str_size < INET_ADDRSTRLEN)
+    {
+      errno = EINVAL;
+      return -1;
+    }
+
+    in = (struct sockaddr_in*)addr;
+    if(str)
+    {
+      inet_ntop(AF_INET, &in->sin_addr, str, str_size);
+    }
+
+    if(port)
+    {
+      *port = ntohs(in->sin_port);
+    }
+    break;
+  case AF_INET6:
+    if(str && str_size < INET6_ADDRSTRLEN)
+    {
+      errno = EINVAL;
+      return -1;
+    }
+
+    in6 = (struct sockaddr_in6*)addr;
+    if(str)
+    {
+      inet_ntop(AF_INET6, &in6->sin6_addr, str, str_size);
+    }
+
+    if(port)
+    {
+      *port = ntohs(in6->sin6_port);
+    }
+    break;
+  default:
+    ret = -1;
+    break;
   }
 
   return ret;

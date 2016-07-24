@@ -18,7 +18,7 @@
  * \file util_net.h
  * \brief Some helper network functions.
  * \author Sebastien Vincent
- * \date 2013
+ * \date 2013-2016
  */
 
 #ifndef VSUTILS_UTIL_NET
@@ -46,6 +46,17 @@
 extern "C"
 { /* } */
 #endif
+
+/**
+ * \enum address_family
+ * \brief Address family.
+ */
+enum address_family
+{
+  NET_UNSPEC = AF_UNSPEC, /**< Any family. */
+  NET_IPV4 = AF_INET, /**< IPv4 family. */
+  NET_IPV6 = AF_INET6 /**< IPv6 family. */
+};
 
 /**
  * \enum protocol_type
@@ -144,15 +155,16 @@ typedef struct net_sfd_set sfd_set;
 
 /**
  * \brief Create and bind socket.
- * \param type transport protocol used.
+ * \param af address family.
+ * \param protocol transport protocol used.
  * \param addr address or FQDN name.
  * \param port to bind.
+ * \param v6only accept socket to accept both IPv4 and IPv6.
  * \param reuse allow socket to reuse transport address (SO_REUSE).
- * \param nodelay disable naggle algorithm for TCP sockets only (TCP_NODELAY).
  * \return socket descriptor, -1 otherwise (check errno to know the reason).
  */
-int net_socket_create(enum protocol_type type, const char* addr, uint16_t port,
-    int reuse, int nodelay);
+int net_socket_create(enum address_family af, enum protocol_type protocol,
+    const char* addr, uint16_t port, int v6only, int reuse);
 
 /**
  * \brief Free elements of an iovec array.
@@ -220,8 +232,26 @@ static inline int net_sfd_is_ready(int sock, int nsock, sfd_set* fds)
  * \param addr_size size of the sockaddr_storage.
  * \return 0 if success, -1 otherwise.
  */
-int net_make_sockaddr(int family, const char* address, uint16_t port,
+int net_sockaddr_make(int family, const char* address, uint16_t port,
     struct sockaddr_storage* addr, socklen_t* addr_size);
+
+/**
+ * \brief Returns socket address length.
+ * \param addr socket address.
+ * \return socket address length or 0 if failure.
+ */
+socklen_t net_sockaddr_len(const struct sockaddr_storage* addr);
+
+/**
+ * \brief Converts address in string format and port in host order.
+ * \param addr sockaddr storage
+ * \param str if not NULL, converted-string address will be filled in.
+ * \param str_size size of addr parameter.
+ * \param port if not NULL, port will be filled in.
+ * \return 0 if success, -1 otherwise.
+ */
+int net_sockaddr_str(const struct sockaddr_storage* addr, char* str,
+    socklen_t str_size, uint16_t* port);
 
 /**
  * \brief Returns whether or not the address is a valid address (IPv4 or IPv6).

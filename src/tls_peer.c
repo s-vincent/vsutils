@@ -349,7 +349,7 @@ static int tls_peer_setup(struct tls_peer* peer, enum protocol_type type,
     SSL_CTX_set_client_CA_list(peer->ctx_server, calist);
   }
 
-  peer->sock = net_socket_create(type, addr, port, 0, 0);
+  peer->sock = net_socket_create(AF_UNSPEC, type, addr, port, 0, 0);
   peer->type = type;
 
   return (peer->sock > 0)  ? 0 : -1;
@@ -729,6 +729,10 @@ int tls_peer_is_encrypted(const char* buf, size_t len)
     return 0;
   }
 
+  /*
+   * first byte is the TLS content type and the second/third bytes represents
+   * TLS/DTLS version 
+   */
   c = buf[0];
   v = buf[1];
   v2 = buf[2];
@@ -737,19 +741,27 @@ int tls_peer_is_encrypted(const char* buf, size_t len)
   if(c == 0x14 || c == 0x15 || c == 0x16 || c == 0x17)
   {
     /* ok first byte indicates that it is possibly a TLS frame,
-     * check the next two bytes to see if it is TLSv1 or DTLSv1
+     * check the next two bytes to see if it is TLS or DTLS
      */
 
-    /* TLSv1 */
-    if(v == 0x03 && v2 == 0x01)
+    if(v == 0x03)
     {
-      return 1;
+      /* TLSv1, TLSv1.1 or TLSv1.2 */
+      if(v2 == 0x01 || v2 == 0x02 || v2 == 0x03)
+      {
+        return 1;
+      }
     }
-
-    /* DTLSv1 */
-    if(v == 0xfe && v2 == 0xff)
+    else if(v == 0xfe)
     {
-      return 1;
+      /*
+       * DTLSv1 or DTLSv1.2 (there is no DTLSv1.1)
+       * note: the value is the 1's complement of DTLS version
+       */
+      if(v2 == 0xff || v2 == 0xfd)
+      {
+        return 1;
+      }
     }
   }
 
