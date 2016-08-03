@@ -1,8 +1,8 @@
 /**
- * \file thread_dispatcher.c
- * \brief Thread dispatcher for tasks.
+ * \file thread_pool.c
+ * \brief Thread pool for tasks.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
 #include <stdio.h>
@@ -15,104 +15,115 @@
 #include <time.h>
 #include <pthread.h>
 
-#if !defined(_WIN32) && !defined(_WIN64)
-#include <unistd.h>
-#endif
-
-#include "thread_dispatcher.h"
-
-#ifdef __MACH__
-/* MacOS X does not have pthread_mutex_timedlock */
+#include "thread_pool.h"
 
 /**
- * \brief Implementation of pthread_mutex_timedlock for MacOS X.
- * \param mutex the mutex.
- * \param abs_timeout the absolute timeout.
- * \return 0 if success, error value otherwise.
+ * \struct thread_pool.
+ * \brief Thread pool.
  */
-static int priv_pthread_mutex_timedlock(pthread_mutex_t* mutex,
-    const struct timespec* abs_timeout)
-{
-  int ret = 0;
-  struct timeval tv;
-  struct timespec ts;
-
-  ts.tv_sec = 0;
-  ts.tv_nsec = 10000000;
-
-  do
-  {
-    ret = pthread_mutex_trylock(mutex);
-
-    if(ret == EBUSY)
-    {
-      gettimeofday(&tv, NULL);
-      if(tv.tv_sec >= abs_timeout->tv_sec &&
-          (tv.tv_usec * 1000) >= abs_timeout->tv_nsec)
-      {
-        return ETIMEDOUT;
-      }
-    }
-  }
-  while(ret == EBUSY);
-
-  return ret;
-}
-
-#define pthread_mutex_timedlock priv_pthread_mutex_timedlock
-#endif
-
-/**
- * \def DISPATCHER_CONDITION_TIMEOUT
- * \brief Timeout to wait for an item to pop from the list.
- */
-#define DISPATCHER_CONDITION_TIMEOUT 5
-
-/**
- * \struct thread_dispatcher.
- * \brief Thread dispatcher.
- */
-struct thread_dispatcher
+struct thread_pool
 {
   struct list_head tasks; /**< List of tasks. */
   pthread_mutex_t mutex_tasks; /**< Mutex to protect tasks list. */
   pthread_cond_t cond_tasks; /**< Condition for push/pop tasks. */
   pthread_mutex_t mutex_start; /**< Mutex to protect the start condition. */
   pthread_cond_t cond_start; /**< Condition to notify the start. */
-  volatile sig_atomic_t run; /**< Status of the dispatcher. */
-  unsigned int nb_threads; /**< Number of threads. */
+  volatile sig_atomic_t run; /**< Status of the pool. */
+  size_t nb_threads; /**< Number of threads. */
   pthread_t* threads; /**< Array of worker threads. */
 };
 
 /**
+ * \brief Pop the first task of the thread pool.
+ * \param obj thread pool.
+ * \param task task that will be popped, it will be filled with data from the
+ * manager.
+ * \return 0 if success, -1 on failure.
+ * \note This function is blocking until a task is available.
+ */
+int thread_pool_pop(thread_pool obj, struct thread_pool_task* task)
+{
+  struct thread_pool_task* t = NULL;
+  int ret = -1;
+
+  pthread_mutex_lock(&obj->mutex_tasks);
+  {
+    struct list_head* pos = NULL;
+
+    if(obj->run <= 0)
+    {
+      pthread_mutex_unlock(&obj->mutex_tasks);
+      return -1;
+    }
+
+    while(list_head_is_empty(&obj->tasks))
+    {
+      /* wait for a task */
+      pthread_cond_wait(&obj->cond_tasks, &obj->mutex_tasks);
+
+      /* condition signaled or spurious wake up, check if stop/exit */
+      if(obj->run <= 0)
+      {
+      	pthread_mutex_unlock(&obj->mutex_tasks);
+        return -1;
+      }
+    }
+
+    pos = obj->tasks.next;
+    t = list_head_get(pos, struct thread_pool_task, list);
+    ret = 0;
+
+    /* fill task with thread_pool_task data from list */
+    task->data = t->data;
+    task->run = t->run;
+    task->cleanup = t->cleanup;
+
+    /* remove task from list */
+    list_head_remove(&obj->tasks, &t->list);
+    pthread_mutex_unlock(&obj->mutex_tasks);
+  }
+
+  if(ret == 0)
+  {
+    free(t);
+  }
+
+  return ret;
+}
+
+/**
  * \brief Worker thread function that wait for a task to execute.
- * \param data the thread dispatcher.
+ * \param data the thread pool.
  * \return NULL.
  */
 static void* thr_worker(void* data)
 {
-  struct thread_dispatcher* dispatcher = data;
+  struct thread_pool* pool = data;
 
   if(!data)
   {
     return NULL;
   }
 
-  while(dispatcher->run >= 0)
+  /* TODO barrier */
+  while(pool->run >= 0)
   {
-    struct thread_task task;
+    struct thread_pool_task task;
 
-    if(dispatcher->run == 0)
+    if(pool->run == 0)
     {
       /* stop case */
-      pthread_mutex_lock(&dispatcher->mutex_start);
+      pthread_mutex_lock(&pool->mutex_start);
       {
-        pthread_cond_wait(&dispatcher->cond_start, &dispatcher->mutex_start);
+        while(pool->run == 0)
+        {
+          pthread_cond_wait(&pool->cond_start, &pool->mutex_start);
+        }
       }
-      pthread_mutex_unlock(&dispatcher->mutex_start);
+      pthread_mutex_unlock(&pool->mutex_start);
       continue;
     }
-    else if(dispatcher->run == -1)
+    else if(pool->run == -1)
     {
       /* free case */
       break;
@@ -120,8 +131,7 @@ static void* thr_worker(void* data)
     else
     {
       /* running case */
-
-      if(thread_dispatcher_pop(dispatcher, &task) == 0)
+      if(thread_pool_pop(pool, &task) == 0)
       {
         /* process task then cleanup */
         task.run(task.data);
@@ -137,9 +147,9 @@ static void* thr_worker(void* data)
   return NULL;
 }
 
-thread_dispatcher thread_dispatcher_new(unsigned nb)
+thread_pool thread_pool_new(size_t nb)
 {
-  struct thread_dispatcher* ret = NULL;
+  struct thread_pool* ret = NULL;
   pthread_mutexattr_t mutexattr;
 
   if(nb == 0)
@@ -147,7 +157,7 @@ thread_dispatcher thread_dispatcher_new(unsigned nb)
     return NULL;
   }
 
-  ret = malloc(sizeof(struct thread_dispatcher) + (sizeof(pthread_t) * nb));
+  ret = malloc(sizeof(struct thread_pool) + (sizeof(pthread_t) * nb));
   if(!ret)
   {
     return NULL;
@@ -156,7 +166,7 @@ thread_dispatcher thread_dispatcher_new(unsigned nb)
   ret->run = 0;
   list_head_init(&ret->tasks);
   /* memory is already reserved for threads member */
-  ret->threads = (pthread_t*)(((char*)ret) + sizeof(struct thread_dispatcher));
+  ret->threads = (pthread_t*)(((char*)ret) + sizeof(struct thread_pool));
   memset(ret->threads, 0x00, sizeof(pthread_t));
   ret->nb_threads = 0;
 
@@ -200,7 +210,7 @@ thread_dispatcher thread_dispatcher_new(unsigned nb)
     return NULL;
   }
 
-  for(unsigned int i = 0 ; i < nb ; i++)
+  for(size_t i = 0 ; i < nb ; i++)
   {
     if(pthread_create(&ret->threads[i], NULL, thr_worker, ret) != 0)
     {
@@ -217,7 +227,7 @@ thread_dispatcher thread_dispatcher_new(unsigned nb)
     ret->run = -1;
 
     /* error creating all threads, cancel the created ones */
-    for(unsigned int i = 0 ; i < ret->nb_threads ; i++)
+    for(size_t i = 0 ; i < ret->nb_threads ; i++)
     {
       pthread_mutex_lock(&ret->mutex_start);
       {
@@ -241,8 +251,19 @@ thread_dispatcher thread_dispatcher_new(unsigned nb)
   return ret;
 }
 
-void thread_dispatcher_free(thread_dispatcher* obj)
+void thread_pool_free(thread_pool* obj)
 {
+  (*obj)->run = -1;
+
+  /* unblock threads waiting tasks */
+  pthread_mutex_lock(&(*obj)->mutex_tasks);
+  {
+    /* tell the threads that they have to quit */
+    pthread_cond_broadcast(&(*obj)->cond_tasks);
+  }
+  pthread_mutex_unlock(&(*obj)->mutex_tasks);
+
+  /* unblock threads in stop state */
   pthread_mutex_lock(&(*obj)->mutex_start);
   {
     /* tell the threads that they have to quit */
@@ -252,13 +273,13 @@ void thread_dispatcher_free(thread_dispatcher* obj)
   pthread_mutex_unlock(&(*obj)->mutex_start);
 
   /* wait for the threads */
-  for(unsigned int i = 0 ; i < (*obj)->nb_threads ; i++)
+  for(size_t i = 0 ; i < (*obj)->nb_threads ; i++)
   {
     pthread_join((*obj)->threads[i], NULL);
   }
 
   /* cleanup the rest of tasks if any */
-  thread_dispatcher_clean(*obj);
+  thread_pool_clean(*obj);
 
   /* do not care about success or failure of these calls */
   pthread_mutex_destroy(&(*obj)->mutex_tasks);
@@ -270,11 +291,11 @@ void thread_dispatcher_free(thread_dispatcher* obj)
   *obj = NULL;
 }
 
-int thread_dispatcher_push(thread_dispatcher obj, struct thread_task* task)
+int thread_pool_push(thread_pool obj, struct thread_pool_task* task)
 {
-  struct thread_task* t = NULL;
+  struct thread_pool_task* t = NULL;
 
-  t = malloc(sizeof(struct thread_task));
+  t = malloc(sizeof(struct thread_pool_task));
   if(!t)
   {
     return -1;
@@ -307,75 +328,23 @@ int thread_dispatcher_push(thread_dispatcher obj, struct thread_task* task)
   return 0;
 }
 
-int thread_dispatcher_pop(thread_dispatcher obj, struct thread_task* task)
+int thread_pool_clean(thread_pool obj)
 {
-  struct thread_task* t = NULL;
-  struct list_head* pos;
-  struct timespec ts;
-  int ret = 0;
-
-#if defined(_POSIX_TIMERS) && !defined(__MACH__)
-  clock_gettime(CLOCK_REALTIME, &ts);
-  ts.tv_sec += DISPATCHER_CONDITION_TIMEOUT;
-#else
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  ts.tv_sec = tv.tv_sec + DISPATCHER_CONDITION_TIMEOUT;
-  ts.tv_nsec = 0;
-#endif
-
-  if(pthread_mutex_timedlock(&obj->mutex_tasks, &ts) == 0)
+  /* do not clean while running */
+  if(obj->run == 1)
   {
-    if(list_head_is_empty(&obj->tasks))
-    {
-      /* wait for a task */
-      if(pthread_cond_timedwait(&obj->cond_tasks,
-            &obj->mutex_tasks, &ts) != 0)
-      {
-        pthread_mutex_unlock(&obj->mutex_tasks);
-        return -1;
-      }
-    }
-
-    if(list_head_is_empty(&obj->tasks))
-    {
-      pthread_mutex_unlock(&obj->mutex_tasks);
-      return -1;
-    }
-
-    pos = obj->tasks.next;
-    t = list_head_get(pos, struct thread_task, list);
-    ret = 0;
-
-    /* fill task with thread_task data from list */
-    task->data = t->data;
-    task->run = t->run;
-    task->cleanup = t->cleanup;
-
-    /* remove task from list */
-    list_head_remove(&obj->tasks, &t->list);
-    pthread_mutex_unlock(&obj->mutex_tasks);
+    return -1;
   }
-
-  if(ret == 0)
-  {
-    free(t);
-  }
-
-  return ret;
-}
-
-int thread_dispatcher_clean(thread_dispatcher obj)
-{
-  struct list_head* pos = NULL;
-  struct list_head* tmp = NULL;
 
   pthread_mutex_lock(&obj->mutex_tasks);
   {
+    struct list_head* pos = NULL;
+    struct list_head* tmp = NULL;
+
     list_head_iterate_safe(&obj->tasks, pos, tmp)
     {
-      struct thread_task* t = list_head_get(pos,
-          struct thread_task, list);
+      struct thread_pool_task* t = list_head_get(pos,
+          struct thread_pool_task, list);
       list_head_remove(&obj->tasks, &t->list);
       free(t);
     }
@@ -387,7 +356,7 @@ int thread_dispatcher_clean(thread_dispatcher obj)
   return 0;
 }
 
-void thread_dispatcher_start(thread_dispatcher obj)
+void thread_pool_start(thread_pool obj)
 {
   pthread_mutex_lock(&obj->mutex_start);
   {
@@ -397,7 +366,7 @@ void thread_dispatcher_start(thread_dispatcher obj)
   pthread_mutex_unlock(&obj->mutex_start);
 }
 
-void thread_dispatcher_stop(thread_dispatcher obj)
+void thread_pool_stop(thread_pool obj)
 {
   pthread_mutex_lock(&obj->mutex_start);
   {

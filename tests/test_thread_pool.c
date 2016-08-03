@@ -1,6 +1,6 @@
 /**
- * \file test_thread_dispatcher.c
- * \brief Tests for thread dispatcher.
+ * \file test_thread_pool.c
+ * \brief Tests for thread pool.
  * \author Sebastien Vincent
  * \date 2014
  */
@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "thread_dispatcher.h"
+#include "thread_pool.h"
 
 /**
  * \brief Run function.
@@ -39,19 +39,19 @@ static void fcn_cleanup(void* data)
 int main(int argc, char** argv)
 {
   const size_t tasks_size = 20;
-  thread_dispatcher th = NULL;
-  struct thread_task tasks[tasks_size];
+  thread_pool th = NULL;
+  struct thread_pool_task tasks[tasks_size];
 
   (void)argc;
   (void)argv;
 
   fprintf(stdout, "Begin\n");
-  th = thread_dispatcher_new(10);
-  fprintf(stdout, "Thread dispatcher: %p\n", (void*)th);
+  th = thread_pool_new(10);
+  fprintf(stdout, "Thread pool: %p\n", (void*)th);
 
   if(!th)
   {
-    fprintf(stderr, "Failed to create dispatcher errno=%d\n",
+    fprintf(stderr, "Failed to create pool errno=%d\n",
         errno);
     exit(EXIT_FAILURE);
   }
@@ -62,19 +62,19 @@ int main(int argc, char** argv)
     tasks[i].run = fcn_run;
     tasks[i].cleanup = fcn_cleanup;
 
-    if(thread_dispatcher_push(th, &tasks[i]) != 0)
+    if(thread_pool_push(th, &tasks[i]) != 0)
     {
       fprintf(stderr, "Failed to add task %u\n", i);
     }
   }
 
-  thread_dispatcher_start(th);
-  sleep(3);
+  thread_pool_start(th);
+  sleep(1);
 
   fprintf(stdout, "Stop stuff\n");
-  thread_dispatcher_stop(th);
+  thread_pool_stop(th);
   fprintf(stdout, "Free stuff\n");
-  thread_dispatcher_free(&th);
+  thread_pool_free(&th);
   fprintf(stdout, "OK\n");
 
   fprintf(stdout, "End\n");
