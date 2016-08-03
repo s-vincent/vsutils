@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 Sebastien Vincent.
+ * Copyright (C) 2006-2016 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * \file dbg.c
  * \brief Some routines to print debug message.
  * \author Sebastien Vincent
- * \date 2006-2013
+ * \date 2006-2016
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,31 +47,34 @@ extern "C"
 { /* } */
 #endif
 
-void dbg_print(const char* f, int line, const char* format, ...)
+void dbg_fprint(const char* file, const char* func, int line, FILE* out,
+    const char* format, ...)
 {
   va_list args;
 
 #ifdef _MSC_VER
   SYSTEMTIME tlt;
   GetLocalTime (&tlt);
-  fprintf(stderr, "%02d:%02d:%02d.%03u|[%s:%d]", tlt.wHour, tlt.wMinute,
-      tlt.wSecond, tlt.wMilliseconds, f, line);
+  fprintf(out, "%02d:%02d:%02d.%03u|[%s/%s:%d] ", tlt.wHour, tlt.wMinute,
+      tlt.wSecond, tlt.wMilliseconds, file, func, line);
 #else
   struct timeval lt;
   struct tm* tlt = NULL;
+  struct tm tmp;
+
   gettimeofday(&lt, NULL);
-  tlt = localtime((time_t*)&lt.tv_sec);
-  fprintf(stderr, "%02d:%02d:%02d.%06u [%s:%d]\t", tlt->tm_hour, tlt->tm_min,
-      tlt->tm_sec, (uint32_t)lt.tv_usec, f, line);
+  tlt = localtime_r((time_t*)&lt.tv_sec, &tmp);
+  fprintf(out, "%02d:%02d:%02d.%06u [%s/%s:%d] ", tlt->tm_hour, tlt->tm_min,
+      tlt->tm_sec, (uint32_t)lt.tv_usec, file, func, line);
 #endif
 
   va_start(args, format);
-  vfprintf(stderr, format, args);
+  vfprintf(out, format, args);
   va_end(args);
 }
 
-void dbg_print_hexa(const char* f, int line, const char* buf, size_t len,
-    const char* format, ...)
+void dbg_fprint_hexa(const char* file, const char* func, int line, FILE* out,
+    const char* buf, size_t len, const char* format, ...)
 {
   size_t i = 0;
   va_list args;
@@ -79,27 +82,29 @@ void dbg_print_hexa(const char* f, int line, const char* buf, size_t len,
 #ifdef _MSC_VER
   SYSTEMTIME tlt;
   GetLocalTime (&tlt);
-  fprintf(stderr, "%02d:%02d:%02d.%03u [%s:%d]\t", tlt.wHour, tlt.wMinute,
-      tlt.wSecond, tlt.wMilliseconds, f, line);
+  fprintf(out, "%02d:%02d:%02d.%03u [%s/%s:%d] ", tlt.wHour, tlt.wMinute,
+      tlt.wSecond, tlt.wMilliseconds, file, func, line);
 #else
   struct timeval lt;
   struct tm* tlt = NULL;
+  struct tm tmp;
+
   gettimeofday(&lt, NULL);
-  tlt = localtime((time_t*)&lt.tv_sec);
-  fprintf(stderr, "%02d:%02d:%02d.%06u [%s:%d]\t", tlt->tm_hour, tlt->tm_min,
-      tlt->tm_sec, (uint32_t)lt.tv_usec, f, line);
+  tlt = localtime_r((time_t*)&lt.tv_sec, &tmp);
+  fprintf(out, "%02d:%02d:%02d.%06u [%s/%s:%d] ", tlt->tm_hour, tlt->tm_min,
+      tlt->tm_sec, (uint32_t)lt.tv_usec, file, func, line);
 #endif
 
   va_start(args, format);
-  vfprintf(stderr, format, args);
+  vfprintf(out, format, args);
   va_end(args);
 
+  fprintf(out, " ");
   for(i = 0 ; i < len ; i++)
   {
-    fprintf(stderr, "%02x ", (unsigned int)buf[i]);
+    fprintf(out, "%02x ", (unsigned int)buf[i]);
   }
-
-  fprintf(stderr, "\n");
+  fprintf(out, "\n");
 }
 
 #ifdef __cplusplus

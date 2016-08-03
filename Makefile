@@ -1,21 +1,25 @@
 CC=gcc
-CFLAGS=-std=c99 -c -Wall -Wextra -Werror -Wstrict-prototypes -Wredundant-decls -Wshadow -pedantic -fno-strict-aliasing -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 -O2 -I./include/vsutils
+#CC=clang-3.8
+CFLAGS=-std=c11 -c -Wall -Wextra -Werror -Wstrict-prototypes -Wredundant-decls -Wshadow -pedantic -pedantic-errors -fno-strict-aliasing -D_XOPEN_SOURCE=700 -O2 -I./include/vsutils
 LDFLAGS=-lpthread -lrt -lcrypto -lssl -lOpenCL
-SOURCES=$(wildcard src/*c)
+SOURCES=$(wildcard src/*.c)
 OBJ=$(SOURCES:.c=.o)
-TESTS= test_bitfield test_list test_thread_dispatcher test_netevt test_mq_posix test_mq_sysv test_shm_posix test_shm_sysv test_sem_posix test_sem_sysv
+TESTS= test_bitfield test_list test_thread_pool test_thread_dispatcher test_netevt test_mq_posix test_mq_sysv test_shm_posix test_shm_sysv test_sem_posix test_sem_sysv
 
 all: $(OBJ)
 	
 tests: $(TESTS) $(OBJ)
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) -g $(CFLAGS) $< -o $@
 
 test_bitfield: $(OBJ) tests/test_bitfield.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_list: $(OBJ) tests/test_list.o
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+test_thread_pool: $(OBJ) tests/test_thread_pool.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 test_thread_dispatcher: $(OBJ) tests/test_thread_dispatcher.o

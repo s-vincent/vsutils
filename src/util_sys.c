@@ -230,19 +230,27 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
       }
 
 #ifdef _POSIX_SAVED_IDS
-      setegid(gid_real);
-      return seteuid(uid_real);
+      if(setegid(gid_real) != 0 || seteuid(uid_real) != 0)
+      {
+        return -1;
+      }
 #else /* i.e. for *BSD */
-      setregid(-1, gid_real);
-      return setreuid(-1, uid_real);
+      if(setregid(-1, gid_real) != 0 || setreuid(-1, uid_real) != 0)
+      {
+        return -1;
+      }
+      return 0;
 #endif
     }
 
     /* get user_name information (UID and GID) */
     if(getpwnam_r(user_name, tmpUser, buf, sizeof(buf), &tmp) == 0)
     {
-      setegid(user.pw_gid);
-      return seteuid(user.pw_uid);
+      if(setegid(user.pw_gid) != 0 || seteuid(user.pw_uid) != 0)
+      {
+        return -1;
+      }
+      return 0;
     }
     else
     {
@@ -266,11 +274,17 @@ int sys_gain_privileges(uid_t uid_eff, gid_t gid_eff)
   return -1;
 #else /* Unix */
 #ifdef _POSIX_SAVED_IDS
-  setegid(gid_eff);
-  return seteuid(uid_eff);
+  if(setegid(gid_eff) != 0 || seteuid(uid_eff) != 0)
+  {
+    return -1;
+  }
+  return 0;
 #else /* i.e for *BSD */
-  setregid(-1, gid_eff);
-  return setreuid(-1, uid_eff);
+  if(setregid(-1, gid_eff) != 0 || setreuid(-1, uid_eff) != 0)
+  {
+    return -1;
+  }
+  return 0;
 #endif
 #endif
 }
@@ -279,11 +293,10 @@ void sys_convert_to_hex(const unsigned char* bin, size_t bin_len,
     unsigned char* hex, size_t hex_len)
 {
   size_t i = 0;
-  unsigned char j = 0;
 
   for(i = 0 ; i < bin_len && (i * 2) < hex_len ; i++)
   {
-    j = (bin[i] >> 4) & 0x0f;
+    unsigned char j = (bin[i] >> 4) & 0x0f;
 
     if(j <= 9)
     {
@@ -367,7 +380,7 @@ int sys_s_snprintf(char* str, size_t size, const char* format, ...)
   va_start(args, format);
   ret = snprintf(str, size - 1, format,  args);
   str[size - 1] = 0x00; /* add the final NULL character */
-
+  va_end(args);
   return ret;
 }
 
@@ -381,6 +394,35 @@ void* sys_s_memset(void* src, int c, size_t len)
     *ptr++ = c;
   }
   return src;
+}
+
+size_t sys_get_cores(void)
+{
+  long nb = 0;
+
+#ifdef _SC_NPROCESSORS_ONLN
+  /*
+   * XXX find a POSIX portable way to determine number of core
+   * _SC_NPROCESSORS_ONLN is not standard but works on GNU/Linux,
+   * MacOS X >= 10.4 , Solaris, AIX, FreeBSD >= 5.0 and some recent
+   * versions of OpenBSD and NetBSD
+   */
+  nb = sysconf(_SC_NPROCESSORS_ONLN);
+  if(nb == -1)
+  {
+    nb = 1;
+  }
+#elif defined(_WIN32) || defined(_WIN64)
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+
+  nb = sysinfo.dwNumberOfProcessors;
+#else
+  /* not supported platform, considered 1 core */
+  nb = 1;
+#endif
+
+  return nb;
 }
 
 #ifdef __cplusplus

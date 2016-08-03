@@ -149,7 +149,7 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
     {
       int already = 0;
 
-      /* TODO EV_EOF / EV_ERROR */
+      /* TODO EV_EOF/EV_ERROR */
 
       /* 0 = check read state
        * 1 = check write state

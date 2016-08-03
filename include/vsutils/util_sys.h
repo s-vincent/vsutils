@@ -35,7 +35,6 @@
 #include <sys/types.h>
 #else
 typedef int mode_t;
-typedef int ssize_t;
 typedef int pid_t;
 #define inline __inline
 #endif
@@ -201,6 +200,12 @@ int sys_s_snprintf(char* str, size_t size, const char* format, ...);
  * \return pointer to src.
  */
 void* sys_s_memset(void* src, int c, size_t len);
+
+/**
+ * \brief Returns number of processors cores.
+ * \return number of processors cores.
+ */
+size_t sys_get_cores(void);
 
 #ifdef __cplusplus
 }

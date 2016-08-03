@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 Sebastien Vincent.
+ * Copyright (C) 2006-2016 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * \file dbg.h
  * \brief Some routines to print debug message.
  * \author Sebastien Vincent
- * \date 2006-2013
+ * \date 2006-2016
  */
 
 #ifndef VSUTILS_DBG_H
@@ -36,77 +36,66 @@ extern "C"
 #include <sys/types.h>
 
 /**
- * \def DBG_ATTR_FILE
- * \brief Current file and line seperated with a comma.
- */
-#define DBG_ATTR_FILE __FILE__, __LINE__
-
-#if __STDC_VERSION__ >= 199901L /* C99 */
-/**
- * \def DBG_ATTR_FUNC
- * \brief Current file and line seperated with a comma.
- */
-#define DBG_ATTR_FUNC __func__, __LINE__
-
-/**
  * \def DBG_ATTR
- * \brief Current file and line seperated with a comma.
+ * \brief Current file, function and line seperated with a comma.
  */
-#define DBG_ATTR DBG_ATTR_FUNC
-#else
-/**
- * \def DBG_ATTR
- * \brief Current file and line seperated with a comma.
- */
-#define DBG_ATTR DBG_ATTR_FILE
-#endif
+#define DBG_ATTR __FILE__,  __func__, __LINE__
 
 /**
- * \brief Print a debug message on stderr.
- * \param f filename.
+ * \brief Print a debug message on specific stream.
+ * \param file filename.
+ * \param func function name.
  * \param line line number.
+ * \param out file stream.
  * \param format format of the output (similary to printf param).
  * \param ... list of arguments.
- * \author Sebastien Vincent
  */
-void dbg_print(const char* f, int line, const char* format, ...);
+void dbg_fprint(const char* file, const char* func, int line, FILE* out,
+    const char* format, ...);
 
 /**
- * \brief Print the content of a buffer in hexadecimal.
- * \param f filename.
+ * \brief Print the content of a buffer in hexadecimal on specific stream.
+ * \param file filename.
+ * \param func function name.
  * \param line line number.
+ * \param out file stream.
  * \param buf buffer to print.
  * \param len size of the buffer.
  * \param format format of the output (similary to printf param).
  * \param ... list of arguments.
- * \author Sebastien Vincent
  * \warning Remember to pass pointer when you cast an integer for buf param.
  */
-void dbg_print_hexa(const char* f, int line, const char* buf, size_t len,
-    const char* format, ...);
+void dbg_fprint_hexa(const char* file, const char* func, int line, FILE* out,
+    const char* buf, size_t len, const char* format, ...);
 
+#ifndef NDEBUG
 /**
  * \def debug
- * \brief Print a debug message.
- *
- * Use similary like a variadic macro: debug(DBG_ATTR, format, ...).
- * \warning Respect the use: debug(DBG_ATTR, format, ...).
+ * \brief Print a debug message on stderr.
  */
-#ifndef NDEBUG
-#define debug dbg_print
+#define debug(...) dbg_fprint(DBG_ATTR, stderr, __VA_ARGS__)
+
+/**
+ * \def fdebug
+ * \brief Print a debug message on specific stream
+ */
+#define fdebug(...) dbg_fprint(DBG_ATTR, __VA_ARGS__)
 #else
 #define debug(...)
+#define fdebug(...)
 #endif
 
 /**
  * \def debug_hexa
  * \brief Print the content of a buffer in hexadecimal.
- *
- * Use similary like a variadic macro:
- * debug_print_hexa(DBG_ATTR, buf, buflen, format, ...).
- * \warning Respect the use: debug_hexa(DBG_ATTR, buf, buflen, ...).
  */
-#define debug_hexa dbg_print_hexa
+#define debug_hexa(...) dbg_fprint_hexa(DBG_ATTR, stderr, __VA_ARGS__)
+
+/**
+ * \def fdebug_hexa
+ * \brief Print the content of a buffer in hexadecimal on specific stream.
+ */
+#define fdebug_hexa(...) dbg_fprint_hexa(DBG_ATTR, __VA_ARGS__)
 
 /**
  * If you want to have debug message on stderr when some pthread functions are

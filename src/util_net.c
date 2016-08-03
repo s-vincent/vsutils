@@ -246,7 +246,7 @@ char* net_encode_http_string(const char* str)
   {
     unsigned int t = (unsigned int)str[i];
 
-    if(t < 42 || t == ',' || (t >= 58 && t < 64) ||
+    if(t < 42 || (t >= 58 && t < 64) ||
        (t >= 91 && t < 95) || t == '`' ||
        t > 122 || t == '+' || t == '&' ||
        t == ',' || t == ';' || t == '/' ||
