@@ -431,7 +431,6 @@ int thread_dispatcher_push(thread_dispatcher obj,
   /* select the thread to dispatch task */
   select = color % obj->nb_threads;
 
-  printf("select: %d %zu\n", select, obj->nb_threads);
   worker = &obj->threads[select];
 
   /* enqueue in the selected thread worker queue */
