@@ -105,7 +105,6 @@ static void* thr_worker(void* data)
     return NULL;
   }
 
-  /* TODO barrier */
   while(pool->run >= 0)
   {
     struct thread_pool_task task;
