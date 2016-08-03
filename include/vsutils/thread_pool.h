@@ -1,31 +1,31 @@
 /**
- * \file thread_dispatcher.h
- * \brief Thread dispatcher for tasks.
+ * \file thread_pool.h
+ * \brief Thread pool for tasks.
  * \author Sebastien Vincent
- * \date 2014
+ * \date 2014-2016
  */
 
-#ifndef VSUTILS_THREAD_DISPATCHER_H
-#define VSUTILS_THREAD_DISPATCHER_H
+#ifndef VSUTILS_THREAD_POOL_H
+#define VSUTILS_THREAD_POOL_H
 
 #include "list.h"
 
 /**
- * \typedef thread_dispatcher
- * \brief Opaque type for thread dispatcher.
+ * \typedef thread_pool
+ * \brief Opaque type for thread pool.
  */
-typedef struct thread_dispatcher* thread_dispatcher;
+typedef struct thread_pool* thread_pool;
 
 /**
- * \struct thread_task
- * \brief Task for the thread dispatcher.
+ * \struct thread_pool_task
+ * \brief Task for the thread pool.
  *
  * The data member is passed to the run and cleanup functions.\n
  * The run function is executed when the task is processed by a worker
  * thread.\n
  * The cleanup function (if not NULL) is executed after the run function.
  */
-struct thread_task
+struct thread_pool_task
 {
   void* data; /**< Application data. */
   void (*run)(void*); /**< Run function. */
@@ -34,53 +34,46 @@ struct thread_task
 };
 
 /**
- * \brief Create a new thread dispatcher with "nb" worker thread.
+ * \brief Create a new thread pool.
+ * \param nb number of threads to launcher.
+ * \return new thread pool or NULL if failure.
  */
-thread_dispatcher thread_dispatcher_new(unsigned nb);
+thread_pool thread_pool_new(size_t nb);
 
 /**
- * \brief Delete a thread dispatcher.
- * \param obj pointer on thread_dispatcher.
+ * \brief Delete a thread pool.
+ * \param obj pointer on thread_pool.
  */
-void thread_dispatcher_free(thread_dispatcher* obj);
+void thread_pool_free(thread_pool* obj);
 
 /**
- * \brief Start the thread dispatcher.
- * \param obj thread dispatcher.
+ * \brief Start the thread pool.
+ * \param obj thread pool.
  */
-void thread_dispatcher_start(thread_dispatcher obj);
+void thread_pool_start(thread_pool obj);
 
 /**
- * \brief Stop the thread dispatcher.
- * \param obj thread dispatcher.
+ * \brief Stop the thread pool.
+ * \param obj thread pool.
  */
-void thread_dispatcher_stop(thread_dispatcher obj);
+void thread_pool_stop(thread_pool obj);
 
 /**
- * \brief Push a task to the thread dispatcher.
- * \param obj thread dispatcher.
+ * \brief Push a task to the thread pool.
+ * \param obj thread pool.
  * \param task task to be pushed, task members will be copied so if task is
  * allocated, you can delete it after the call.
  * \return 0 if success, -1 on failure.
  */
-int thread_dispatcher_push(thread_dispatcher obj, struct thread_task* task);
+int thread_pool_push(thread_pool obj, struct thread_pool_task* task);
 
 /**
- * \brief Pop the first task of the thread dispatcher.
- * \param obj thread dispatcher.
- * \param task task that will be popped, it will be filled with data from the
- * manager.
- * \return 0 if success, -1 on failure.
- * \note This function is blocking until a task is available.
- */
-int thread_dispatcher_pop(thread_dispatcher obj, struct thread_task* task);
-
-/**
- * \brief Clean all the task of the thread dispatcher.
- * \param obj thread dispatcher.
+ * \brief Clean tasks of the thread pool.
+ * \param obj thread pool.
  * \return 0 if success, -1 otherwise.
+ * \note Call only this function when thread dispatcher is stopped.
  */
-int thread_dispatcher_clean(thread_dispatcher obj);
+int thread_pool_clean(thread_pool obj);
 
-#endif /* VSUTILS_THREAD_DISPATCHER_H */
+#endif /* VSUTILS_THREAD_POOL_H */
 
