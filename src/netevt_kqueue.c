@@ -271,6 +271,7 @@ static int netevt_kqueue_set_socket(struct netevt_impl* impl, netevt obj,
   struct netevt_kqueue* impl_kqueue = impl->priv;
   int evt = 0;
   int extra = 0;
+  int i = 0;
 
   (void)obj;
 
