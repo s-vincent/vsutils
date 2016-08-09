@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 Sebastien Vincent.
+ * Copyright (C) 2006-2016 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * \file util_sys.c
  * \brief Some helper system functions.
  * \author Sebastien Vincent
- * \date 2006-2013
+ * \date 2006-2016
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,18 +29,21 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <assert.h>
 
 #include <sys/stat.h>
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
-#include <errno.h>
+#include <time.h>
+#include <pwd.h>
+#include <limits.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <time.h>
-#include <pwd.h>
+#include <sys/wait.h>
 #endif
 
 #include "util_sys.h"
@@ -134,18 +137,30 @@ int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
   return -1;
 #else /* Unix */
   pid_t pid = -1;
-  long max = 0;
   int fd = -1;
+  int max_files = sysconf(_SC_OPEN_MAX);
+
+  assert(dir);
+
+  if(max_files == -1)
+  {
+    max_files = 3;
+  }
 
   pid = fork();
 
   if(pid > 0) /* father */
   {
+    pid_t child = -1;
+
     if(cleanup)
     {
       cleanup(arg);
     }
-    _exit(EXIT_SUCCESS);
+
+    /* do the twice fork() method so wait child */
+    wait(&child);
+    exit(EXIT_SUCCESS);
   }
   else if(pid == -1) /* error */
   {
@@ -160,18 +175,21 @@ int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
     return -1;
   }
 
-  max = sysconf(_SC_OPEN_MAX);
-  for(long i = STDIN_FILENO + 1 ; i < max ; i++)
+  /* second fork to ensure that process is completely detached from terminal */
+  pid = fork();
+
+  if(pid != 0)
+  {
+    exit(EXIT_SUCCESS);
+  }
+
+  /* close all files descriptor */
+  for(int i = 0 ; i < max_files ; i++)
   {
     close(i);
   }
 
   /* change directory */
-  if(!dir)
-  {
-    dir = "/";
-  }
-
   if(chdir(dir) == -1)
   {
     return -1;
@@ -185,7 +203,6 @@ int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
   if((fd = open("/dev/null", O_RDWR, 0)) != -1)
   {
     /* redirect stdin, stdout and stderr to /dev/null */
-    close(STDIN_FILENO);
     dup2(fd, STDIN_FILENO);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
@@ -214,7 +231,7 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
   {
     /* program runs as root or sudoers */
     struct passwd user;
-    struct passwd* tmpUser = &user;
+    struct passwd* tmp_user = &user;
     struct passwd* tmp = NULL;
     char buf[1024];
 
@@ -239,12 +256,12 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
       {
         return -1;
       }
-      return 0;
 #endif
+      return 0;
     }
 
     /* get user_name information (UID and GID) */
-    if(getpwnam_r(user_name, tmpUser, buf, sizeof(buf), &tmp) == 0)
+    if(getpwnam_r(user_name, tmp_user, buf, sizeof(buf), &tmp) == 0 && tmp)
     {
       if(setegid(user.pw_gid) != 0 || seteuid(user.pw_uid) != 0)
       {
@@ -399,6 +416,11 @@ void* sys_s_memset(void* src, int c, size_t len)
 size_t sys_get_cores(void)
 {
   long nb = 0;
+
+/* XXX hack to provide constant on POSIX/XSI compilation for MacOS X */
+#if defined __APPLE__ && __DARWIN_C_LEVEL < __DARWIN_C_FULL
+#define _SC_NPROCESSORS_ONLN 58
+#endif
 
 #ifdef _SC_NPROCESSORS_ONLN
   /*
