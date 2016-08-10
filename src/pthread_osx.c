@@ -19,19 +19,19 @@ int pthread_spin_init(pthread_spinlock_t* lock, int pshared)
 {
   (void)pshared;
 
-  lock = OS_SPINLOCK_INIT;
+  *lock = OS_SPINLOCK_INIT;
   return 0;
 }
 
 int pthread_spin_destroy(pthread_spinlock_t* lock)
 {
-  if(lock != OS_SPINLOCK_INIT)
+  if(*lock != OS_SPINLOCK_INIT)
   {
     /* spinlock already locked, cannot destroy */
     return EBUSY;
   }
 
-  lock = OS_SPINLOCK_INIT;
+  *lock = OS_SPINLOCK_INIT;
   return 0;
 }
 
