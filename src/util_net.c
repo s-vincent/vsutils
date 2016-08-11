@@ -234,10 +234,15 @@ char* net_encode_http_string(const char* str)
   size_t j = 0;
   size_t alloc_size = 3 * len + 1;
 
+  if(!len)
+  {
+    return NULL;
+  }
+
   /* in the worst case, it take 3x (%20) the size */
   p = malloc(sizeof(char) * alloc_size);
 
-  if(!p || !len)
+  if(!p)
   {
     return NULL;
   }
