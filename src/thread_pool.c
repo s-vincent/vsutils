@@ -158,7 +158,7 @@ static void* thr_worker(void* data)
   while(run >= 0)
   {
     struct thread_pool_task task;
-    
+
     run = thread_pool_get_run(pool);
 
     if(run == 0)

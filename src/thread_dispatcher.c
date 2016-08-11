@@ -220,7 +220,7 @@ static int thread_worker_pop(struct thread_worker* worker,
     {
       /* wait for a task */
       pthread_cond_wait(&worker->cond_tasks, &worker->mutex_tasks);
-    
+
       run = thread_dispatcher_get_run(worker->dispatcher);
 
       /* condition signaled or spurious wake up, check if stop/exit */
@@ -292,7 +292,7 @@ static void* thr_worker(void* data)
         {
           /* wait for start */
           pthread_cond_wait(&dispatcher->cond_start, &dispatcher->mutex_start);
-          
+
           run = thread_dispatcher_get_run(dispatcher);
         }
       }
