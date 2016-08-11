@@ -231,18 +231,18 @@ char* net_encode_http_string(const char* str)
 {
   size_t len = strlen(str);
   char* p = NULL;
-  unsigned int i = 0;
-  unsigned int j = 0;
+  size_t j = 0;
+  size_t alloc_size = 3 * len + 1;
 
   /* in the worst case, it take 3x (%20) the size */
-  p = malloc(sizeof(char) * (3 * len + 1));
+  p = malloc(sizeof(char) * alloc_size);
 
-  if(!p)
+  if(!p || !len)
   {
     return NULL;
   }
 
-  for(i = 0, j = 0 ; i < len ; i++, j++)
+  for(size_t i = 0 ; i < len ; i++, j++)
   {
     unsigned int t = (unsigned int)str[i];
 
@@ -254,7 +254,7 @@ char* net_encode_http_string(const char* str)
        t == '=' || t == ':' )
     {
       /* replace */
-      sprintf(p + j, "%%%02X", t);
+      snprintf(p + j, alloc_size - j, "%%%02X", t);
       j += 2;
     }
     else
