@@ -189,7 +189,8 @@ char* net_encode_http_string(const char* str);
  * \param iovcnt number of element that should be written.
  * \param addr source address to send with UDP, set to NULL for TCP.
  * \param addr_size sizeof addr.
- * \return number of bytes written or -1 if error (check errno to know the reason).
+ * \return number of bytes written or -1 if error (check errno to know the
+ * reason).
  * \warning this function work only with socket!
  */
 ssize_t net_sock_writev(int fd, const struct iovec *iov, size_t iovcnt,

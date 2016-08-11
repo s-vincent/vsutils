@@ -35,9 +35,9 @@ extern "C"
  */
 enum ipc_mq_type
 {
-    IPC_MQ_SYSV, /**< SystemV MQ IPC. */
-    IPC_MQ_POSIX, /**< POSIX MQ IPC. */
-    IPC_MQ_WIN /**< Windows MQ IPC. */
+  IPC_MQ_SYSV, /**< SystemV MQ IPC. */
+  IPC_MQ_POSIX, /**< POSIX MQ IPC. */
+  IPC_MQ_WIN /**< Windows MQ IPC. */
 };
 
 /**
@@ -46,16 +46,16 @@ enum ipc_mq_type
  */
 struct ipc_mq_data
 {
-    /**
-     * \brief Type for System V or priority for POSIX message queue.
-     * Value 0 is not allowed, just put 1 for default.
-     */
-    long priv;
+  /**
+   * \brief Type for System V or priority for POSIX message queue.
+   * Value 0 is not allowed, just put 1 for default.
+   */
+  long priv;
 
-    /**
-     * \brief Data.
-     */
-    char data[];
+  /**
+   * \brief Data.
+   */
+  char data[];
 };
 
 /**

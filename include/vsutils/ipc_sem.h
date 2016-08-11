@@ -39,9 +39,9 @@ extern "C"
  */
 enum ipc_sem_type
 {
-    IPC_SEM_SYSV, /**< SystemV semaphore IPC. */
-    IPC_SEM_POSIX, /**< POSIX semaphore IPC. */
-    IPC_SEM_WIN /**< Windows semaphore IPC. */
+  IPC_SEM_SYSV, /**< SystemV semaphore IPC. */
+  IPC_SEM_POSIX, /**< POSIX semaphore IPC. */
+  IPC_SEM_WIN /**< Windows semaphore IPC. */
 };
 
 /**
@@ -64,7 +64,7 @@ typedef struct ipc_sem* ipc_sem;
  * \warning Some parameters of permission may be ignored for IPC_SEM_WIN type.
  */
 ipc_sem ipc_sem_new(enum ipc_sem_type type, void* value, int mode, int perm,
-        unsigned int init);
+    unsigned int init);
 
 /**
  * \brief Closes and frees IPC semaphore object.

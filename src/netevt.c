@@ -293,7 +293,8 @@ int netevt_remove_all_sockets(netevt obj)
   return 0;
 }
 
-int netevt_wait(netevt obj, int timeout, struct netevt_event* events, size_t events_nb)
+int netevt_wait(netevt obj, int timeout, struct netevt_event* events,
+    size_t events_nb)
 {
   return obj->impl.wait(&obj->impl, obj, timeout, events, events_nb);
 }

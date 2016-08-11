@@ -90,12 +90,13 @@
  *    free(e);
  * }
  * \endcode
- * \note To use it simply: VSUTILS_LIST_HEAD(name_variable) to declare the variable.
+ * \note To use it simply: VSUTILS_LIST_HEAD(name_variable) to declare the
+ * variable.
  */
 struct list_head
 {
-  struct list_head *next; /**< Next element in the list. */
-  struct list_head *prev; /**< Previous element in the list. */
+  struct list_head* next; /**< Next element in the list. */
+  struct list_head* prev; /**< Previous element in the list. */
 };
 
 /**

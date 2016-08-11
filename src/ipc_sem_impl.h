@@ -32,30 +32,30 @@
  */
 struct ipc_sem
 {
-    /**
-     * \brief Semaphore type.
-     */
-    enum ipc_sem_type type;
+  /**
+   * \brief Semaphore type.
+   */
+  enum ipc_sem_type type;
 
-    /**
-     * \brief Function to free the object.
-     */
-    void (*free)(ipc_sem*, int);
+  /**
+   * \brief Function to free the object.
+   */
+  void (*free)(ipc_sem*, int);
 
-    /**
-     * \brief Function to lock a semaphore.
-     */
-    int (*lock)(ipc_sem);
+  /**
+   * \brief Function to lock a semaphore.
+   */
+  int (*lock)(ipc_sem);
 
-    /**
-     * \brief Function to unlock a semaphore.
-     */
-    int (*unlock)(ipc_sem);
+  /**
+   * \brief Function to unlock a semaphore.
+   */
+  int (*unlock)(ipc_sem);
 
-    /**
-     * \brief Private implementation.
-     */
-    char priv[];
+  /**
+   * \brief Private implementation.
+   */
+  char priv[];
 };
 
 

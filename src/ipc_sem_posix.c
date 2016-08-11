@@ -46,128 +46,128 @@ extern "C"
  */
 struct ipc_sem_posix
 {
-    sem_t* sem; /**< POSIX semaphore descriptor. */
-    char name[1024]; /**< POSIX semaphore name. */
+  sem_t* sem; /**< POSIX semaphore descriptor. */
+  char name[1024]; /**< POSIX semaphore name. */
 };
 
 ipc_sem ipc_sem_posix_new(void* value, int mode, int perm, unsigned int init)
 {
-    ipc_sem ret = NULL;
-    struct ipc_sem_posix* priv = NULL;
-    char* name = (char*)value;
-    sem_t* sem;
+  ipc_sem ret = NULL;
+  struct ipc_sem_posix* priv = NULL;
+  char* name = (char*)value;
+  sem_t* sem;
 
-    if(name == NULL)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
+  if(name == NULL)
+  {
+    errno = EINVAL;
+    return NULL;
+  }
 
-    sem = sem_open(name, mode, (mode_t)perm, init);
-    if(sem == NULL)
-    {
-        return NULL;
-    }
+  sem = sem_open(name, mode, (mode_t)perm, init);
+  if(sem == NULL)
+  {
+    return NULL;
+  }
 
-    ret = malloc(sizeof(struct ipc_sem) + sizeof(struct ipc_sem_posix));
-    if(!ret)
-    {
-        sem_close(sem);
-        return NULL;
-    }
+  ret = malloc(sizeof(struct ipc_sem) + sizeof(struct ipc_sem_posix));
+  if(!ret)
+  {
+    sem_close(sem);
+    return NULL;
+  }
 
-    memset(ret, 0x00, sizeof(struct ipc_sem) + sizeof(struct ipc_sem_posix));
-    ret->type = IPC_SEM_POSIX;
-    ret->free = ipc_sem_posix_free;
-    ret->lock = ipc_sem_posix_lock;
-    ret->unlock = ipc_sem_posix_unlock;
-    priv = (struct ipc_sem_posix*)&ret->priv;
-    strncpy(priv->name, name, sizeof(priv->name));
-    priv->sem = sem;
+  memset(ret, 0x00, sizeof(struct ipc_sem) + sizeof(struct ipc_sem_posix));
+  ret->type = IPC_SEM_POSIX;
+  ret->free = ipc_sem_posix_free;
+  ret->lock = ipc_sem_posix_lock;
+  ret->unlock = ipc_sem_posix_unlock;
+  priv = (struct ipc_sem_posix*)&ret->priv;
+  strncpy(priv->name, name, sizeof(priv->name));
+  priv->sem = sem;
 
-    return ret;
+  return ret;
 }
 
 void ipc_sem_posix_free(ipc_sem* obj, int unlink)
 {
-    if(*obj)
+  if(*obj)
+  {
+    struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&(*obj)->priv;
+
+    /* close semaphore */
+    sem_close(priv->sem);
+
+    if(unlink)
     {
-        struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&(*obj)->priv;
-
-        /* close semaphore */
-        sem_close(priv->sem);
-
-        if(unlink)
-        {
-            /* remove it from the system */
-            sem_unlink(priv->name);
-        }
-
-        free(*obj);
-        *obj = NULL;
+      /* remove it from the system */
+      sem_unlink(priv->name);
     }
+
+    free(*obj);
+    *obj = NULL;
+  }
 }
 
 int ipc_sem_posix_lock(ipc_sem obj)
 {
-    struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
+  struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
 
-    return sem_wait(priv->sem);
+  return sem_wait(priv->sem);
 }
 
 int ipc_sem_posix_lock_timed(ipc_sem obj, const struct timespec* timeout)
 {
-    struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
+  struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
 
-    return sem_timedwait(priv->sem, timeout);
+  return sem_timedwait(priv->sem, timeout);
 }
 
 int ipc_sem_posix_unlock(ipc_sem obj)
 {
-    struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
+  struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
 
-    return sem_post(priv->sem);
+  return sem_post(priv->sem);
 }
 
 #else
 
 ipc_sem_posix ipc_sem_posix_new(void* value, int mode, int perm)
 {
-    (void)value;
-    (void)mode;
-    (void)perm;
+  (void)value;
+  (void)mode;
+  (void)perm;
 
-    errno = ENOSYS;
-    return NULL;
+  errno = ENOSYS;
+  return NULL;
 }
 
 void ipc_sem_posix_free(ipc_sem* obj, int unlink)
 {
-    (void)obj;
-    (void)unlink;
-    return;
+  (void)obj;
+  (void)unlink;
+  return;
 }
 
 int ipc_sem_posix_lock(ipc_sem obj)
 {
-    (void)obj;
-    errno = ENOSYS;
-    return -1;
+  (void)obj;
+  errno = ENOSYS;
+  return -1;
 }
 
 int ipc_sem_posix_lock_timed(ipc_sem obj, const struct timespec* timeout)
 {
-    (void)obj;
-    (void)timeout;
-    errno = ENOSYS;
-    return -1;
+  (void)obj;
+  (void)timeout;
+  errno = ENOSYS;
+  return -1;
 }
 
 int ipc_sem_posix_unlock(ipc_sem obj)
 {
-    (void)obj;
-    errno = ENOSYS;
-    return -1;
+  (void)obj;
+  errno = ENOSYS;
+  return -1;
 }
 
 #endif

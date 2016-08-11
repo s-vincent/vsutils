@@ -283,7 +283,8 @@ thread_dispatcher thread_dispatcher_new(size_t nb)
 
   assert(nb);
 
-  ret = malloc(sizeof(struct thread_dispatcher) + (sizeof(struct thread_worker) * nb));
+  ret = malloc(sizeof(struct thread_dispatcher) +
+      (sizeof(struct thread_worker) * nb));
   if(!ret)
   {
     return NULL;

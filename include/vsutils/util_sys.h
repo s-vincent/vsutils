@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2013 Sebastien Vincent.
+ * Copyright (C) 2006-2016 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * \file util_sys.h
  * \brief Some helper system functions.
  * \author Sebastien Vincent
- * \date 2006-2013
+ * \date 2006-2016
  */
 
 #ifndef VSUTILS_UTIL_SYS

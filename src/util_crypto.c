@@ -91,7 +91,8 @@ int crypto_random_bytes_generate(uint8_t* id, size_t len)
   return 0;
 }
 
-int crypto_sha1_generate(unsigned char* hash, const unsigned char* text, size_t len)
+int crypto_sha1_generate(unsigned char* hash, const unsigned char* text,
+    size_t len)
 {
   if(!SHA1(text, len, hash))
   {
@@ -101,7 +102,8 @@ int crypto_sha1_generate(unsigned char* hash, const unsigned char* text, size_t 
   return 0;
 }
 
-int crypto_md5_generate(unsigned char* hash, const unsigned char* text, size_t len)
+int crypto_md5_generate(unsigned char* hash, const unsigned char* text,
+    size_t len)
 {
   if(!MD5(text, len, hash))
   {

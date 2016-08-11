@@ -37,9 +37,9 @@ extern "C"
  */
 enum ipc_shm_type
 {
-    IPC_SHM_SYSV, /**< SystemV shared memory IPC. */
-    IPC_SHM_POSIX, /**< POSIX shared memory IPC. */
-    IPC_SHM_WIN /**< Windows shared memory IPC. */
+  IPC_SHM_SYSV, /**< SystemV shared memory IPC. */
+  IPC_SHM_POSIX, /**< POSIX shared memory IPC. */
+  IPC_SHM_WIN /**< Windows shared memory IPC. */
 };
 
 /**
@@ -62,7 +62,7 @@ typedef struct ipc_shm* ipc_shm;
  * \warning Some parameters of permission may be ignored for IPC_SHM_WIN type.
  */
 ipc_shm ipc_shm_new(enum ipc_shm_type type, void* value, int mode, int perm,
-        size_t size);
+    size_t size);
 
 /**
  * \brief Closes and frees IPC shared memory object.

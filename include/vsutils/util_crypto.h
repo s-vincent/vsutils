@@ -65,7 +65,8 @@ int crypto_random_bytes_generate(uint8_t* id, size_t len);
  * \param len text length.
  * \return 0 if success, -1 otherwise.
  */
-int crypto_sha1_generate(unsigned char* hash, const unsigned char* text, size_t len);
+int crypto_sha1_generate(unsigned char* hash, const unsigned char* text,
+    size_t len);
 
 /**
  * \brief Generate a MD5 hash.
@@ -74,7 +75,8 @@ int crypto_sha1_generate(unsigned char* hash, const unsigned char* text, size_t 
  * \param len text length.
  * \return 0 if success, -1 otherwise.
  */
-int crypto_md5_generate(unsigned char* hash, const unsigned char* text, size_t len);
+int crypto_md5_generate(unsigned char* hash, const unsigned char* text,
+    size_t len);
 
 /**
  * \brief Generate a HMAC-SHA1 hash.

@@ -133,8 +133,6 @@ static int netevt_epoll_wait(struct netevt_impl* impl, netevt obj, int timeout,
         continue;
       }
 
-      /* TODO error */
-
       /* 0 = check read state
        * 1 = check write state
        * 2 = check exception state
@@ -172,8 +170,10 @@ static int netevt_epoll_wait(struct netevt_impl* impl, netevt obj, int timeout,
         {
           if(!already)
           {
-            events[nb].socket = *((struct netevt_socket*)impl_epoll->events[i].data.ptr);
-            events[nb].ptr = ((struct netevt_socket*)impl_epoll->events[i].data.ptr);
+            events[nb].socket =
+              *((struct netevt_socket*)impl_epoll->events[i].data.ptr);
+            events[nb].ptr =
+              ((struct netevt_socket*)impl_epoll->events[i].data.ptr);
             events[nb].state = state;
             already = 1;
           }

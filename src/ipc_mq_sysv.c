@@ -46,147 +46,148 @@ extern "C"
  */
 struct ipc_mq_sysv
 {
-    int msqid; /**< System V message queue descriptor. */
-    key_t key; /**< System V message queue key. */
-    size_t max_msg_size; /**< Maximum size for a message. */
+  int msqid; /**< System V message queue descriptor. */
+  key_t key; /**< System V message queue key. */
+  size_t max_msg_size; /**< Maximum size for a message. */
 };
 
 ipc_mq ipc_mq_sysv_new(void* value, int mode, int perm)
 {
-    ipc_mq ret = NULL;
-    struct ipc_mq_sysv* priv = NULL;
-    key_t key = (key_t)(intptr_t)value;
-    int flags = ((mode & O_CREAT) ? IPC_CREAT : 0) | perm;
-    int msqid = -1;
-    struct msqid_ds attr;
+  ipc_mq ret = NULL;
+  struct ipc_mq_sysv* priv = NULL;
+  key_t key = (key_t)(intptr_t)value;
+  int flags = ((mode & O_CREAT) ? IPC_CREAT : 0) | perm;
+  int msqid = -1;
+  struct msqid_ds attr;
 
-    msqid = msgget(key, flags);
-    if(msqid == -1)
-    {
-        return NULL;
-    }
+  msqid = msgget(key, flags);
+  if(msqid == -1)
+  {
+    return NULL;
+  }
 
-    if(msgctl(msqid, IPC_STAT, &attr) != 0)
-    {
-        return NULL;
-    }
+  if(msgctl(msqid, IPC_STAT, &attr) != 0)
+  {
+    return NULL;
+  }
 
-    ret = malloc(sizeof(struct ipc_mq) + sizeof(struct ipc_mq_sysv));
-    if(!ret)
-    {
-        return NULL;
-    }
+  ret = malloc(sizeof(struct ipc_mq) + sizeof(struct ipc_mq_sysv));
+  if(!ret)
+  {
+    return NULL;
+  }
 
-    memset(ret, 0x00, sizeof(struct ipc_mq) + sizeof(struct ipc_mq_sysv));
-    ret->type = IPC_MQ_SYSV;
-    ret->free = ipc_mq_sysv_free;
-    ret->get_max_msg_size = ipc_mq_sysv_get_max_msg_size;
-    ret->send = ipc_mq_sysv_send;
-    ret->recv = ipc_mq_sysv_recv;
-    priv = (struct ipc_mq_sysv*)&ret->priv;
-    priv->msqid = msqid;
-    priv->key = key;
-    priv->max_msg_size = attr.msg_qbytes > 8192 ? 8192 : attr.msg_qbytes;
+  memset(ret, 0x00, sizeof(struct ipc_mq) + sizeof(struct ipc_mq_sysv));
+  ret->type = IPC_MQ_SYSV;
+  ret->free = ipc_mq_sysv_free;
+  ret->get_max_msg_size = ipc_mq_sysv_get_max_msg_size;
+  ret->send = ipc_mq_sysv_send;
+  ret->recv = ipc_mq_sysv_recv;
+  priv = (struct ipc_mq_sysv*)&ret->priv;
+  priv->msqid = msqid;
+  priv->key = key;
+  priv->max_msg_size = attr.msg_qbytes > 8192 ? 8192 : attr.msg_qbytes;
 
-    return ret;
+  return ret;
 }
 
 void ipc_mq_sysv_free(ipc_mq* obj, int unlink)
 {
-    if(*obj)
+  if(*obj)
+  {
+    struct ipc_mq_sysv* priv = (struct ipc_mq_sysv*)&(*obj)->priv;
+
+    if(unlink)
     {
-        struct ipc_mq_sysv* priv = (struct ipc_mq_sysv*)&(*obj)->priv;
-
-        if(unlink)
-        {
-            msgctl(priv->msqid, IPC_RMID, NULL);
-        }
-
-        free(*obj);
-        *obj = NULL;
+      msgctl(priv->msqid, IPC_RMID, NULL);
     }
+
+    free(*obj);
+    *obj = NULL;
+  }
 }
 
 size_t ipc_mq_sysv_get_max_msg_size(ipc_mq obj)
 {
-    struct ipc_mq_sysv* priv = (struct ipc_mq_sysv*)&obj->priv;
+  struct ipc_mq_sysv* priv = (struct ipc_mq_sysv*)&obj->priv;
 
-    return priv->max_msg_size;
+  return priv->max_msg_size;
 }
 
-int ipc_mq_sysv_send(ipc_mq obj, const struct ipc_mq_data* data, size_t data_size)
+int ipc_mq_sysv_send(ipc_mq obj, const struct ipc_mq_data* data,
+    size_t data_size)
 {
-    struct ipc_mq_sysv* priv = NULL;
+  struct ipc_mq_sysv* priv = NULL;
 
-    if(!obj || !data || data_size == 0)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+  if(!obj || !data || data_size == 0)
+  {
+    errno = EINVAL;
+    return -1;
+  }
 
-    priv = (struct ipc_mq_sysv*)&obj->priv;
+  priv = (struct ipc_mq_sysv*)&obj->priv;
 
-    return msgsnd(priv->msqid, data, data_size, 0);
+  return msgsnd(priv->msqid, data, data_size, 0);
 }
 
 int ipc_mq_sysv_recv(ipc_mq obj, struct ipc_mq_data* data, size_t data_size)
 {
-    struct ipc_mq_sysv* priv = NULL;
+  struct ipc_mq_sysv* priv = NULL;
 
-    if(!obj || !data || data_size == 0)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+  if(!obj || !data || data_size == 0)
+  {
+    errno = EINVAL;
+    return -1;
+  }
 
-    priv = (struct ipc_mq_sysv*)&obj->priv;
+  priv = (struct ipc_mq_sysv*)&obj->priv;
 
-    return msgrcv(priv->msqid, data, data_size, data->priv, 0);
+  return msgrcv(priv->msqid, data, data_size, data->priv, 0);
 }
 
 #else
 
 ipc_mq ipc_mq_sysv_new(void* value, int mode, int perm)
 {
-    (void)value;
-    (void)mode;
-    (void)perm;
+  (void)value;
+  (void)mode;
+  (void)perm;
 
-    errno = ENOSYS;
-    return NULL;
+  errno = ENOSYS;
+  return NULL;
 }
 
 void ipc_mq_sysv_free(ipc_mq* obj, int unlink)
 {
-    (void)obj;
-    (void)unlink;
-    return;
+  (void)obj;
+  (void)unlink;
+  return;
 }
 
 size_t ipc_mq_sysv_get_max_msg_size(ipc_mq obj)
 {
-    (void)obj;
+  (void)obj;
 
-    errno = ENOSYS;
-    return 0;
+  errno = ENOSYS;
+  return 0;
 }
 
 int ipc_mq_sysv_send(ipc_mq obj, const ipc_mq_data* data, size_t data_size)
 {
-    (void)obj;
-    (void)data;
-    (void)data_size;
-    errno = ENOSYS;
-    return NULL;
+  (void)obj;
+  (void)data;
+  (void)data_size;
+  errno = ENOSYS;
+  return NULL;
 }
 
 int ipc_mq_sysv_recv(ipc_mq obj, ipc_mq_data* data, size_t data_size)
 {
-    (void)obj;
-    (void)data;
-    (void)data_size;
-    errno = ENOSYS;
-    return NULL;
+  (void)obj;
+  (void)data;
+  (void)data_size;
+  errno = ENOSYS;
+  return NULL;
 }
 
 #endif

@@ -63,7 +63,8 @@ size_t ipc_mq_sysv_get_max_msg_size(ipc_mq obj);
  * \param data_size Size of data.
  * \return 0 if success, -1 if failure.
  */
-int ipc_mq_sysv_send(ipc_mq obj, const struct ipc_mq_data* data, size_t data_size);
+int ipc_mq_sysv_send(ipc_mq obj, const struct ipc_mq_data* data,
+    size_t data_size);
 
 /**
  * \brief Receive data from message queue.
