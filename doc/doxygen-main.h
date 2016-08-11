@@ -9,8 +9,8 @@
  * \mainpage VSUtils documentation
  *
  * \section section-intro Introduction
- * 
- * VSUtils is a collection of several C utility and helper functions to 
+ *
+ * VSUtils is a collection of several C utility and helper functions to
  * ease development of system and/or network softwares.
  *
  * \section section-standard Standards
@@ -22,6 +22,6 @@
  * \section section-license License
  *
  * VSUtils is licensed under the
- * <a href="http://opensource.org/licenses/isc-license.txt">ISC</a> license. 
+ * <a href="http://opensource.org/licenses/isc-license.txt">ISC</a> license.
  */
 

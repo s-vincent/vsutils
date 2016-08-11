@@ -731,7 +731,7 @@ int tls_peer_is_encrypted(const char* buf, size_t len)
 
   /*
    * first byte is the TLS content type and the second/third bytes represents
-   * TLS/DTLS version 
+   * TLS/DTLS version
    */
   c = buf[0];
   v = buf[1];
