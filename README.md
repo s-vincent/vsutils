@@ -12,8 +12,8 @@ It includes:
 - System helpers (endianess , daemon/service, converter, ...);
 - TLS and DTLS socket wrapper based on OpenSSL implementation;
 - Some crypto related functions based on OpenSSL;
+- Doubly linked list, queue, stack and binary tree data structures;
 - Bitfield implementation;
 - Debug related functions;
-- Doubly linked list;
 - Some #define to determine the OS.
 
