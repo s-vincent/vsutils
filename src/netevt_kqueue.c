@@ -28,8 +28,23 @@
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__) || defined(__FreeBSD_kernel__)
 
+/* NetBSD restricts kqueue() on non-POSIX environment */
+#if defined(__NetBSD__) && !defined(_NETBSD_SOURCE)
+#define _NETBSD_SOURCE
+#endif
+
+#ifdef __NetBSD__
+#define GET_UDATA(x) (void*)x
+#define CAST_UDATA(x) (intptr_t)x
+#define CAST_FILTER(x) (uint32_t)x
+#else
+#define GET_UDATA(x) x
+#define CAST_UDATA(x) x
+#define CAST_FILTER(x) x
+#endif
+
 /* some typedef for *BSD */
-#if !defined(__APPLE__) && !defined(__BSD_VISIBLE)
+#if !defined(__APPLE__) && !__BSD_VISIBLE
 typedef unsigned short u_short;
 typedef unsigned char u_char;
 typedef unsigned int u_int;
@@ -184,13 +199,15 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
           state = NETEVT_STATE_OTHER;
         }
 
-        if(impl_kqueue->trgrd[i].filter == evt &&
+        if(impl_kqueue->trgrd[i].filter == CAST_FILTER(evt) &&
           (extra == 0 ? 1 : (impl_kqueue->trgrd[i].flags & EV_OOBAND)))
         {
           if(!already)
           {
-            events[nb].socket = *((struct netevt_socket*)impl_kqueue->trgrd[i].udata);
-            events[nb].ptr= (struct netevt_socket*)impl_kqueue->trgrd[i].udata;
+            events[nb].socket =
+              *((struct netevt_socket*)GET_UDATA(impl_kqueue->trgrd[i].udata));
+            events[nb].ptr=
+		(struct netevt_socket*)GET_UDATA(impl_kqueue->trgrd[i].udata);
             events[nb].state = state;
           }
           else
@@ -249,7 +266,7 @@ static int netevt_kqueue_add_socket(struct netevt_impl* impl, netevt obj,
   }
 
   EV_SET(&impl_kqueue->mntrs[impl_kqueue->fds_next], sock->sock, evt,
-      EV_ADD | EV_ENABLE, extra, 0, sock);
+      EV_ADD | EV_ENABLE, extra, 0, CAST_UDATA(sock));
   impl_kqueue->fds_next++;
   impl_kqueue->nsock++;
 
@@ -294,7 +311,7 @@ static int netevt_kqueue_set_socket(struct netevt_impl* impl, netevt obj,
     if(impl_kqueue->mntrs[i].ident == (uintptr_t)sock->sock)
     {
       EV_SET(&impl_kqueue->mntrs[i], sock->sock, evt,
-          EV_ADD | EV_ENABLE, extra, 0, sock);
+          EV_ADD | EV_ENABLE, extra, 0, CAST_UDATA(sock));
       ret = 0;
       break;
     }
@@ -331,7 +348,7 @@ static int netevt_kqueue_remove_socket(struct netevt_impl* impl, netevt obj,
     {
       EV_SET(&impl_kqueue->mntrs[i], sock->sock,
           EVFILT_READ | EVFILT_WRITE, EV_DELETE, 0,
-          0, sock);
+          0, CAST_UDATA(sock));
       kevent(impl_kqueue->kq, &impl_kqueue->mntrs[i], 1, NULL, 0, NULL);
       break;
     }
