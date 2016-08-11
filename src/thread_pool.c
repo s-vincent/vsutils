@@ -44,10 +44,40 @@ struct thread_pool
   pthread_cond_t cond_tasks; /**< Condition for push/pop tasks. */
   pthread_mutex_t mutex_start; /**< Mutex to protect the start condition. */
   pthread_cond_t cond_start; /**< Condition to notify the start. */
-  volatile sig_atomic_t run; /**< Status of the pool. */
+  pthread_rwlock_t mutex_run; /**< RW mutex to protect run state. */
+  int run; /**< Status of the pool. */
   size_t nb_threads; /**< Number of threads. */
   pthread_t* threads; /**< Array of worker threads. */
 };
+
+/**
+ * \brief Atomically get run state.
+ * \return run state.
+ */
+static int thread_pool_get_run(struct thread_pool* obj)
+{
+  int run = 0;
+
+  pthread_rwlock_rdlock(&obj->mutex_run);
+  {
+    run = obj->run;
+  }
+  pthread_rwlock_unlock(&obj->mutex_run);
+  return run;
+}
+
+/**
+ * \brief Atomically set run state.
+ * \param run run state to set
+ */
+static void thread_pool_set_run(struct thread_pool* obj, int run)
+{
+  pthread_rwlock_wrlock(&obj->mutex_run);
+  {
+    obj->run = run;
+  }
+  pthread_rwlock_unlock(&obj->mutex_run);
+}
 
 /**
  * \brief Pop the first task of the thread pool.
@@ -65,8 +95,10 @@ int thread_pool_pop(thread_pool obj, struct thread_pool_task* task)
   pthread_mutex_lock(&obj->mutex_tasks);
   {
     struct list_head* pos = NULL;
+    int run = 0;
 
-    if(obj->run <= 0)
+    run = thread_pool_get_run(obj);
+    if(run <= 0)
     {
       pthread_mutex_unlock(&obj->mutex_tasks);
       return -1;
@@ -78,7 +110,8 @@ int thread_pool_pop(thread_pool obj, struct thread_pool_task* task)
       pthread_cond_wait(&obj->cond_tasks, &obj->mutex_tasks);
 
       /* condition signaled or spurious wake up, check if stop/exit */
-      if(obj->run <= 0)
+      run = thread_pool_get_run(obj);
+      if(run <= 0)
       {
       	pthread_mutex_unlock(&obj->mutex_tasks);
         return -1;
@@ -115,30 +148,34 @@ int thread_pool_pop(thread_pool obj, struct thread_pool_task* task)
 static void* thr_worker(void* data)
 {
   struct thread_pool* pool = data;
+  int run = 0;
 
   if(!data)
   {
     return NULL;
   }
 
-  while(pool->run >= 0)
+  while(run >= 0)
   {
     struct thread_pool_task task;
+    
+    run = thread_pool_get_run(pool);
 
-    if(pool->run == 0)
+    if(run == 0)
     {
       /* stop case */
       pthread_mutex_lock(&pool->mutex_start);
       {
-        while(pool->run == 0)
+        while(run == 0)
         {
           pthread_cond_wait(&pool->cond_start, &pool->mutex_start);
+          run = thread_pool_get_run(pool);
         }
       }
       pthread_mutex_unlock(&pool->mutex_start);
       continue;
     }
-    else if(pool->run == -1)
+    else if(run == -1)
     {
       /* free case */
       break;
@@ -208,6 +245,14 @@ thread_pool thread_pool_new(size_t nb)
     return NULL;
   }
 
+  if(pthread_rwlock_init(&ret->mutex_run, NULL) != 0)
+  {
+    pthread_cond_destroy(&ret->cond_start);
+    pthread_mutex_destroy(&ret->mutex_start);
+    free(ret);
+    return NULL;
+  }
+
   if(pthread_mutex_init(&ret->mutex_start, NULL) != 0)
   {
     pthread_mutex_destroy(&ret->mutex_tasks);
@@ -239,7 +284,7 @@ thread_pool thread_pool_new(size_t nb)
 
   if(ret->nb_threads != nb)
   {
-    ret->run = -1;
+    thread_pool_set_run(ret, -1);
 
     /* error creating all threads, cancel the created ones */
     for(size_t i = 0 ; i < ret->nb_threads ; i++)
@@ -268,7 +313,7 @@ thread_pool thread_pool_new(size_t nb)
 
 void thread_pool_free(thread_pool* obj)
 {
-  (*obj)->run = -1;
+  thread_pool_set_run(*obj, -1);
 
   /* unblock threads waiting tasks */
   pthread_mutex_lock(&(*obj)->mutex_tasks);
@@ -282,7 +327,6 @@ void thread_pool_free(thread_pool* obj)
   pthread_mutex_lock(&(*obj)->mutex_start);
   {
     /* tell the threads that they have to quit */
-    (*obj)->run = -1;
     pthread_cond_broadcast(&(*obj)->cond_start);
   }
   pthread_mutex_unlock(&(*obj)->mutex_start);
@@ -345,8 +389,10 @@ int thread_pool_push(thread_pool obj, struct thread_pool_task* task)
 
 int thread_pool_clean(thread_pool obj)
 {
+  int run = thread_pool_get_run(obj);
+
   /* do not clean while running */
-  if(obj->run == 1)
+  if(run == 1)
   {
     return -1;
   }
@@ -375,7 +421,7 @@ void thread_pool_start(thread_pool obj)
 {
   pthread_mutex_lock(&obj->mutex_start);
   {
-    obj->run = 1;
+    thread_pool_set_run(obj, 1);
     pthread_cond_broadcast(&obj->cond_start);
   }
   pthread_mutex_unlock(&obj->mutex_start);
@@ -385,7 +431,7 @@ void thread_pool_stop(thread_pool obj)
 {
   pthread_mutex_lock(&obj->mutex_start);
   {
-    obj->run = 0;
+    thread_pool_set_run(obj, 0);
     pthread_cond_broadcast(&obj->cond_start);
   }
   pthread_mutex_unlock(&obj->mutex_start);

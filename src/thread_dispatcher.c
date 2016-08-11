@@ -24,8 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <errno.h>
+#include <signal.h>
 #include <assert.h>
 
 #include <sys/time.h>
@@ -56,9 +56,14 @@ struct thread_dispatcher
   pthread_cond_t cond_start;
 
   /**
+   * \brief RW mutex to protect run state.
+   */
+  pthread_rwlock_t mutex_run;
+
+  /**
    * \brief Status of the dispatcher.
    */
-  volatile sig_atomic_t run;
+  int run;
 
   /**
    * \brief Next thread number for "random" thread selection.
@@ -101,6 +106,35 @@ struct thread_worker
    */
   struct list_head tasks;
 };
+
+/**
+ * \brief Atomically get run state.
+ * \return run state.
+ */
+static int thread_dispatcher_get_run(struct thread_dispatcher* obj)
+{
+  int run = 0;
+
+  pthread_rwlock_rdlock(&obj->mutex_run);
+  {
+    run = obj->run;
+  }
+  pthread_rwlock_unlock(&obj->mutex_run);
+  return run;
+}
+
+/**
+ * \brief Atomically set run state.
+ * \param run run state to set
+ */
+static void thread_dispatcher_set_run(struct thread_dispatcher* obj, int run)
+{
+  pthread_rwlock_wrlock(&obj->mutex_run);
+  {
+    obj->run = run;
+  }
+  pthread_rwlock_unlock(&obj->mutex_run);
+}
 
 /**
  * \brief Initialize a thread worker.
@@ -171,9 +205,12 @@ static int thread_worker_pop(struct thread_worker* worker,
   pthread_mutex_lock(&worker->mutex_tasks);
   {
     struct list_head* pos = NULL;
+    int run = 0;
+
+    run = thread_dispatcher_get_run(worker->dispatcher);
 
     /* if arrived after condition signaled */
-    if(worker->dispatcher->run <= 0)
+    if(run <= 0)
     {
       pthread_mutex_unlock(&worker->mutex_tasks);
       return -1;
@@ -183,9 +220,11 @@ static int thread_worker_pop(struct thread_worker* worker,
     {
       /* wait for a task */
       pthread_cond_wait(&worker->cond_tasks, &worker->mutex_tasks);
+    
+      run = thread_dispatcher_get_run(worker->dispatcher);
 
       /* condition signaled or spurious wake up, check if stop/exit */
-      if(worker->dispatcher->run <= 0)
+      if(run <= 0)
       {
         pthread_mutex_unlock(&worker->mutex_tasks);
         return -1;
@@ -223,6 +262,7 @@ static void* thr_worker(void* data)
 {
   struct thread_worker* worker = (struct thread_worker*)data;
   struct thread_dispatcher* dispatcher = NULL;
+  int run = 0;
 
   assert(worker);
 
@@ -236,27 +276,30 @@ static void* thr_worker(void* data)
   sigfillset(&mask);
   pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-  while(dispatcher->run >= 0)
+  while(run >= 0)
   {
     struct thread_dispatcher_task task;
 
     memset(&task, 0x00, sizeof(struct thread_dispatcher_task));
+    run = thread_dispatcher_get_run(dispatcher);
 
-    if(dispatcher->run == 0)
+    if(run == 0)
     {
       /* stop case */
       pthread_mutex_lock(&dispatcher->mutex_start);
       {
-        /* wait for start */
-        while(dispatcher->run == 0)
+        while(run == 0)
         {
+          /* wait for start */
           pthread_cond_wait(&dispatcher->cond_start, &dispatcher->mutex_start);
+          
+          run = thread_dispatcher_get_run(dispatcher);
         }
       }
       pthread_mutex_unlock(&dispatcher->mutex_start);
       continue;
     }
-    else if(dispatcher->run == -1)
+    else if(run == -1)
     {
       /* free case */
       break;
@@ -308,6 +351,14 @@ thread_dispatcher thread_dispatcher_new(size_t nb)
     return NULL;
   }
 
+  if(pthread_rwlock_init(&ret->mutex_run, NULL) != 0)
+  {
+    pthread_cond_destroy(&ret->cond_start);
+    pthread_mutex_destroy(&ret->mutex_start);
+    free(ret);
+    return NULL;
+  }
+
   ret->next_select = 0;
 
   for(size_t i = 0 ; i < nb ; i++)
@@ -331,7 +382,7 @@ thread_dispatcher thread_dispatcher_new(size_t nb)
 
   if(ret->nb_threads != nb)
   {
-    ret->run = -1;
+    thread_dispatcher_set_run(ret, -1);
 
     /* error creating all threads, cancel the created ones */
     for(size_t i = 0 ; i < ret->nb_threads ; i++)
@@ -364,7 +415,8 @@ void thread_dispatcher_free(thread_dispatcher* obj)
   pthread_mutex_lock(&(*obj)->mutex_start);
   {
     /* tell the threads that they have to quit */
-    (*obj)->run = -1;
+    thread_dispatcher_set_run(*obj, -1);
+
     pthread_cond_broadcast(&(*obj)->cond_start);
   }
   pthread_mutex_unlock(&(*obj)->mutex_start);
@@ -461,11 +513,14 @@ int thread_dispatcher_clean(thread_dispatcher obj)
 {
   struct list_head* pos = NULL;
   struct list_head* tmp = NULL;
+  int run = 0;
 
   assert(obj);
 
+  run = thread_dispatcher_get_run(obj);
+
   /* do not clean while running or destroyed */
-  if(obj->run != 0)
+  if(run != 0)
   {
     return -1;
   }
@@ -497,7 +552,7 @@ void thread_dispatcher_start(thread_dispatcher obj)
 
   pthread_mutex_lock(&obj->mutex_start);
   {
-    obj->run = 1;
+    thread_dispatcher_set_run(obj, 1);
     pthread_cond_broadcast(&obj->cond_start);
   }
   pthread_mutex_unlock(&obj->mutex_start);
@@ -509,7 +564,7 @@ void thread_dispatcher_stop(thread_dispatcher obj)
 
   pthread_mutex_lock(&obj->mutex_start);
   {
-    obj->run = 0;
+    thread_dispatcher_set_run(obj, 0);
     pthread_cond_broadcast(&obj->cond_start);
   }
   pthread_mutex_unlock(&obj->mutex_start);
