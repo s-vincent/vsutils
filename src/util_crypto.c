@@ -215,17 +215,18 @@ uint32_t crypto_crc32_generate(const uint8_t* data, size_t len, uint32_t prev)
 
 void crypto_digest_print(const unsigned char* buf, size_t len)
 {
-  unsigned int i = 0;
+  size_t i = 0;
   char res[128];
+  size_t size = sizeof(res);
 
-  if(len > sizeof(res) - 1)
+  if(len * 2 > size - 1)
   {
     return;
   }
 
   for(i = 0 ; i < len ; i++)
   {
-    sprintf(&res[i * 2], "%02x", buf[i]);
+    snprintf(&res[i * 2], size - (i * 2), "%02x", buf[i]);
   }
   res[i * 2] = 0x00;
 
