@@ -109,6 +109,7 @@ struct thread_worker
 
 /**
  * \brief Atomically get run state.
+ * \param obj thread dispatcher.
  * \return run state.
  */
 static int thread_dispatcher_get_run(struct thread_dispatcher* obj)
@@ -125,6 +126,7 @@ static int thread_dispatcher_get_run(struct thread_dispatcher* obj)
 
 /**
  * \brief Atomically set run state.
+ * \param obj thread dispatcher.
  * \param run run state to set
  */
 static void thread_dispatcher_set_run(struct thread_dispatcher* obj, int run)

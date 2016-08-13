@@ -52,6 +52,7 @@ struct thread_pool
 
 /**
  * \brief Atomically get run state.
+ * \param obj thread pool.
  * \return run state.
  */
 static int thread_pool_get_run(struct thread_pool* obj)
@@ -68,6 +69,7 @@ static int thread_pool_get_run(struct thread_pool* obj)
 
 /**
  * \brief Atomically set run state.
+ * \param obj thread pool.
  * \param run run state to set
  */
 static void thread_pool_set_run(struct thread_pool* obj, int run)
