@@ -151,15 +151,12 @@ int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
 
   if(pid > 0) /* father */
   {
-    pid_t child = -1;
-
     if(cleanup)
     {
       cleanup(arg);
     }
 
     /* do the twice fork() method so wait child */
-    wait(&child);
     exit(EXIT_SUCCESS);
   }
   else if(pid == -1) /* error */
