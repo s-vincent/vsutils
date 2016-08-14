@@ -468,7 +468,7 @@ int thread_dispatcher_push(thread_dispatcher obj,
 {
   struct thread_dispatcher_task* t = NULL;
   struct thread_worker* worker = NULL;
-  int select = 0;
+  int selected = 0;
 
   assert(obj && task);
 
@@ -484,9 +484,9 @@ int thread_dispatcher_push(thread_dispatcher obj,
   list_head_init(&t->list);
 
   /* select the thread to dispatch task */
-  select = color % obj->nb_threads;
+  selected = color % obj->nb_threads;
 
-  worker = &obj->threads[select];
+  worker = &obj->threads[selected];
 
   /* enqueue in the selected thread worker queue */
   pthread_mutex_lock(&worker->mutex_tasks);
