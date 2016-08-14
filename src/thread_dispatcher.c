@@ -68,7 +68,7 @@ struct thread_dispatcher
   /**
    * \brief Next thread number for "random" thread selection.
    */
-  size_t next_select;
+  uint32_t next_select;
 
   /**
    * \brief Array of threads worker.
@@ -453,7 +453,7 @@ void thread_dispatcher_free(thread_dispatcher* obj)
 int thread_dispatcher_push_random(thread_dispatcher obj,
     struct thread_dispatcher_task* task)
 {
-  int color = 0;
+  uint32_t color = 0;
 
   assert(obj && task);
 
@@ -468,7 +468,7 @@ int thread_dispatcher_push(thread_dispatcher obj,
 {
   struct thread_dispatcher_task* t = NULL;
   struct thread_worker* worker = NULL;
-  int selected = 0;
+  size_t selected = 0;
 
   assert(obj && task);
 

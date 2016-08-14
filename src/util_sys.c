@@ -60,22 +60,6 @@ extern "C"
 { /* } */
 #endif
 
-int sys_microsleep(unsigned long usec)
-{
-  unsigned long sec = 0;
-  struct timeval tv;
-
-  sec = (unsigned long)usec / 1000000;
-  usec = (unsigned long)usec % 1000000;
-
-  tv.tv_sec = sec;
-  tv.tv_usec = usec;
-
-  select(0, NULL, NULL, NULL, &tv);
-
-  return 0;
-}
-
 long sys_get_dtablesize(void)
 {
 #if !defined(_WIN32) && !defined(_WIN64)
@@ -138,7 +122,7 @@ int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
 #else /* Unix */
   pid_t pid = -1;
   int fd = -1;
-  int max_files = sysconf(_SC_OPEN_MAX);
+  int max_files = (int)sysconf(_SC_OPEN_MAX);
 
   assert(dir);
 
@@ -306,30 +290,28 @@ int sys_gain_privileges(uid_t uid_eff, gid_t gid_eff)
 void sys_convert_to_hex(const unsigned char* bin, size_t bin_len,
     unsigned char* hex, size_t hex_len)
 {
-  size_t i = 0;
-
-  for(i = 0 ; i < bin_len && (i * 2) < hex_len ; i++)
+  for(size_t i = 0 ; i < bin_len && (i * 2) < hex_len ; i++)
   {
     unsigned char j = (bin[i] >> 4) & 0x0f;
 
     if(j <= 9)
     {
-      hex[i * 2] = (j + '0');
+      hex[i * 2] = (unsigned char)(j + '0');
     }
     else
     {
-      hex[i * 2] = (j + 'a' - 10);
+      hex[i * 2] = (unsigned char)(j + 'a' - 10);
     }
 
     j = bin[i] & 0x0f;
 
     if(j <= 9)
     {
-      hex[i * 2 + 1] = (j + '0');
+      hex[i * 2 + 1] = (unsigned char)(j + '0');
     }
     else
     {
-      hex[i * 2 + 1] = (j + 'a' - 10);
+      hex[i * 2 + 1] = (unsigned char)(j + 'a' - 10);
     }
   }
 }
@@ -346,11 +328,11 @@ void sys_convert_to_uint32(const unsigned char* data, size_t data_len,
 
     if(data[i] >= '0' && data[i] <= '9')
     {
-      *t += data[i] - '0';
+      *t += (uint32_t)data[i] - '0';
     }
     else if(data[i] >= 'a' && data[i] <='f')
     {
-      *t += data[i] - 'a' + 10;
+      *t += (uint32_t)data[i] - 'a' + 10;
     }
   }
 }
@@ -367,11 +349,11 @@ void sys_convert_to_uint64(const unsigned char* data, size_t data_len,
 
     if(data[i] >= '0' && data[i] <= '9')
     {
-      *t += data[i] - '0';
+      *t += (uint64_t)data[i] - '0';
     }
     else if(data[i] >= 'a' && data[i] <='f')
     {
-      *t += data[i] - 'a' + 10;
+      *t += (uint64_t)data[i] - 'a' + 10;
     }
   }
 }
@@ -405,7 +387,7 @@ void* sys_s_memset(void* src, int c, size_t len)
 
   while(tmp--)
   {
-    *ptr++ = c;
+    *ptr++ = (unsigned char)c;
   }
   return src;
 }
@@ -441,7 +423,7 @@ size_t sys_get_cores(void)
   nb = 1;
 #endif
 
-  return nb;
+  return (size_t)nb;
 }
 
 #ifdef __cplusplus

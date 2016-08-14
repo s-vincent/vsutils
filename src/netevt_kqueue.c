@@ -178,7 +178,7 @@ static int netevt_kqueue_wait(struct netevt_impl* impl, netevt obj, int timeout,
 
         if(nb > nb_events)
         {
-          return nb;
+          return (int)nb;
         }
 
         if(j == 0)

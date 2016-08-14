@@ -139,12 +139,12 @@ static int netevt_epoll_wait(struct netevt_impl* impl, netevt obj, int timeout,
        */
       for(unsigned int j = 0 ; j < 3 ; j++)
       {
-        int evt = 0;
+        uint32_t evt = 0;
         int state = 0;
 
         if(nb > nb_events)
         {
-          return nb;
+          return (int)nb;
         }
 
         if(j == 0)

@@ -38,7 +38,7 @@
  */
 struct netevt_poll
 {
-  int nsock; /**< Current number of sockets. */
+  unsigned int nsock; /**< Current number of sockets. */
   unsigned int fds_next; /**< Next free index of fds array. */
   struct pollfd fds[NET_SFD_SETSIZE]; /**< Poll structure to handle event. */
 };
@@ -135,7 +135,7 @@ static int netevt_poll_wait(struct netevt_impl* impl, netevt obj, int timeout,
 
         if(nb > nb_events)
         {
-          return nb;
+          return (int)nb;
         }
 
         if(i == 0)

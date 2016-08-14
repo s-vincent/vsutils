@@ -299,7 +299,7 @@ int netevt_wait(netevt obj, int timeout, struct netevt_event* events,
   return obj->impl.wait(&obj->impl, obj, timeout, events, events_nb);
 }
 
-int netevt_get_nb_sockets(netevt obj)
+size_t netevt_get_nb_sockets(netevt obj)
 {
   return obj->nb_sockets;
 }

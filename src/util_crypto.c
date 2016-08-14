@@ -83,7 +83,7 @@ void crypto_seed_prng_cleanup(void)
 
 int crypto_random_bytes_generate(uint8_t* id, size_t len)
 {
-  if(!RAND_bytes(id, len))
+  if(!RAND_bytes(id, (int)len))
   {
     return -1;
   }
@@ -118,7 +118,7 @@ int crypto_hmac_sha1_generate(unsigned char* hash, const unsigned char* text,
 {
   unsigned int md_len = SHA_DIGEST_LENGTH;
 
-  if(!HMAC(EVP_sha1(), key, key_len, text, text_len, hash, &md_len))
+  if(!HMAC(EVP_sha1(), key, (int)key_len, text, text_len, hash, &md_len))
   {
     return -1;
   }
@@ -131,7 +131,7 @@ int crypto_hmac_md5_generate(unsigned char* hash, const unsigned char* text,
 {
   unsigned int md_len = MD5_DIGEST_LENGTH;
 
-  if(!HMAC(EVP_md5(), key, key_len, text, text_len, hash, &md_len))
+  if(!HMAC(EVP_md5(), key, (int)key_len, text, text_len, hash, &md_len))
   {
     return -1;
   }

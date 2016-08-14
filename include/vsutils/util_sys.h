@@ -66,13 +66,6 @@ extern "C"
 #endif
 
 /**
- * \brief Sleep for usec microseconds.
- * \param usec number of microseconds.
- * \return 0 if success, -1 otherwise.
- */
-int sys_microsleep(unsigned long usec);
-
-/**
  * \brief The getdtablesize() function returning the limit of open file per
  * process. It is not defined by POSIX standard so define it here.
  * \return limit of open files per process.

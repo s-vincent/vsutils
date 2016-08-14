@@ -174,9 +174,9 @@ int netevt_wait(netevt obj, int timeout, struct netevt_event* events,
 /**
  * \brief Get number of sockets registered in the manager.
  * \param obj network event manager.
- * \return Number of socket registered if success, -1 otherwise.
+ * \return Number of socket registered if success.
  */
-int netevt_get_nb_sockets(netevt obj);
+size_t netevt_get_nb_sockets(netevt obj);
 
 /**
  * \brief Returns copy array of netevt_socket.
