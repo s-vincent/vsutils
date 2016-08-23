@@ -111,8 +111,14 @@ void ipc_sem_posix_free(ipc_sem* obj, int unlink)
 int ipc_sem_posix_lock(ipc_sem obj)
 {
   struct ipc_sem_posix* priv = (struct ipc_sem_posix*)&obj->priv;
+  int ret = -1;
 
-  return sem_wait(priv->sem);
+  do
+  {
+    ret = sem_wait(priv->sem);
+  }while(ret == -1 && errno == EINTR);
+
+  return ret;
 }
 
 int ipc_sem_posix_lock_timed(ipc_sem obj, const struct timespec* timeout)
