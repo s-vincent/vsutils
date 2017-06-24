@@ -1,8 +1,8 @@
-CC = gcc
+# CC = gcc
 #CC = clang-3.8
 CFLAGS = -std=c11 -Wall -Wextra -Werror -Wstrict-prototypes -Wredundant-decls -Wshadow -pedantic -pedantic-errors -fno-strict-aliasing -D_XOPEN_SOURCE=700 -O2 -I./include/vsutils
 LDFLAGS = -lpthread -lrt -lcrypto -lssl -lOpenCL
-SOURCES = src/bitfield.c src/dbg.c src/ipc_mq.c src/ipc_mq_posix.c src/ipc_mq_sysv.c src/ipc_sem.c src/ipc_sem_posix.c src/ipc_sem_sysv.c src/ipc_shm.c src/ipc_shm_posix.c src/ipc_shm_sysv.c src/netevt.c src/netevt_epoll.c src/netevt_kqueue.c src/netevt_poll.c src/netevt_select.c src/thread_dispatcher.c src/thread_pool.c src/tls_peer.c src/util_crypto.c src/util_net.c src/util_opencl.c src/util_sys.c
+SOURCES = src/bitfield.c src/dbg.c src/ipc_mq.c src/ipc_mq_posix.c src/ipc_mq_sysv.c src/ipc_sem.c src/ipc_sem_posix.c src/ipc_sem_sysv.c src/ipc_shm.c src/ipc_shm_posix.c src/ipc_shm_sysv.c src/netevt.c src/netevt_epoll.c src/netevt_kqueue.c src/netevt_poll.c src/netevt_select.c src/thread_dispatcher.c src/thread_pool.c src/util_crypto.c src/util_net.c src/util_opencl.c src/util_sys.c
 OBJ = $(SOURCES:.c=.o)
 TESTS = test_bitfield test_list test_thread_pool test_thread_dispatcher test_netevt test_mq_posix test_mq_sysv test_shm_posix test_shm_sysv test_sem_posix test_sem_sysv
 
