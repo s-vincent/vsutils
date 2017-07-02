@@ -1,10 +1,10 @@
-VSUtils
-=======
+# VSUtils
 
 VSUtils is a collection of helper functions related to system and network
 written in C language.
 
-It includes:
+## Contents
+
 - Thread pool and thread dispatcher;
 - Network event-driven helper (select, poll, ...);
 - IPC helpers for POSIX/System V (message queue, shared memory and semaphore);
@@ -16,4 +16,8 @@ It includes:
 - Bitfield implementation;
 - Debug related functions;
 - Some #define to determine the OS.
+
+## License
+
+All codes are under ISC license.
 
