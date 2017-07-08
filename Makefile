@@ -46,8 +46,14 @@ test_sem_posix: $(OBJ) tests/test_sem_posix.o tests/test_sem_common.o
 test_sem_sysv: $(OBJ) tests/test_sem_sysv.o tests/test_sem_common.o
 	$(CC) -o $@ $? $(LDFLAGS)
 
+doc:
+	rm -rf doc/html
+	doxygen doc/Doxyfile
+
 clean:
 	echo $(OBJ)
 	rm -f src/*.o tests/*.o $(TESTS)
 	rm -rf doc/html
+
+.PHONY: doc
 
