@@ -25,12 +25,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "ipc_mq_posix.h"
-
-#if !defined(_WIN32) && !defined(_WIN64)
-#include <unistd.h>
-#endif
 
 #ifdef __cplusplus
 extern "C"

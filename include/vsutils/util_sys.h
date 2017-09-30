@@ -30,23 +30,7 @@
 
 #include <string.h>
 #include <stdint.h>
-
-#ifndef _MSC_VER
 #include <sys/types.h>
-#else
-typedef int mode_t;
-typedef int pid_t;
-#define inline __inline
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-/* some unix types are not defined for Windows
- * (even with MinGW) so declare it here
- */
-typedef int socklen_t;
-typedef int uid_t;
-typedef int gid_t;
-#endif
 
 /**
  * \def SYS_MAX

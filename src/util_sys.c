@@ -34,7 +34,6 @@
 
 #include <sys/stat.h>
 
-#if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 #include <time.h>
 #include <pwd.h>
@@ -44,7 +43,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#endif
 
 #include "util_sys.h"
 
@@ -62,19 +60,12 @@ extern "C"
 
 long sys_get_dtablesize(void)
 {
-#if !defined(_WIN32) && !defined(_WIN64)
   return sysconf(_SC_OPEN_MAX);
-  /*
-     struct rlimit limit;
-     getrlimit(RLIMIT_NOFILE, &limit);
-     return limit.rlim_cur;
-   */
-#else /* Windows */
-#ifndef FD_SETSIZE
-#define FD_SETSIZE 256
-#endif
-  return FD_SETSIZE;
-#endif
+/*
+   struct rlimit limit;
+   getrlimit(RLIMIT_NOFILE, &limit);
+   return limit.rlim_cur;
+*/
 }
 
 int sys_is_big_endian(void)
@@ -116,10 +107,6 @@ char* sys_get_error(int errnum, char* buf, size_t buflen)
 int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
     void* arg)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  errno = ENOSYS;
-  return -1;
-#else /* Unix */
   pid_t pid = -1;
   int fd = -1;
   int max_files = (int)sysconf(_SC_OPEN_MAX);
@@ -195,17 +182,11 @@ int sys_daemon(const char* dir, mode_t mask, void (*cleanup)(void* arg),
   }
 
   return 0;
-#endif
 }
 
 int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
     gid_t gid_eff, const char* user_name)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  /* not implemented */
-  errno = ENOSYS;
-  return -1;
-#else /* Unix */
   (void)gid_eff; /* not used for the moment */
 
   if(uid_real == 0 || uid_eff == 0)
@@ -262,15 +243,10 @@ int sys_drop_privileges(uid_t uid_real, gid_t gid_real, uid_t uid_eff,
 
   /* cannot lost our privileges */
   return -1;
-#endif
 }
 
 int sys_gain_privileges(uid_t uid_eff, gid_t gid_eff)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  errno = ENOSYS;
-  return -1;
-#else /* Unix */
 #ifdef _POSIX_SAVED_IDS
   if(setegid(gid_eff) != 0 || seteuid(uid_eff) != 0)
   {
@@ -283,7 +259,6 @@ int sys_gain_privileges(uid_t uid_eff, gid_t gid_eff)
     return -1;
   }
   return 0;
-#endif
 #endif
 }
 
@@ -413,11 +388,6 @@ size_t sys_get_cores(void)
   {
     nb = 1;
   }
-#elif defined(_WIN32) || defined(_WIN64)
-  SYSTEM_INFO sysinfo;
-  GetSystemInfo(&sysinfo);
-
-  nb = sysinfo.dwNumberOfProcessors;
 #else
   /* not supported platform, considered 1 core */
   nb = 1;

@@ -33,7 +33,8 @@ extern "C"
 { /* } */
 #endif
 
-#if !defined(_WIN32) && !defined(_WIN64)
+/* On all Unix, System V IPC are supported */
+#if 1
 
 #include <sys/ipc.h>
 #include <sys/shm.h>

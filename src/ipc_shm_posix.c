@@ -24,15 +24,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#include "ipc_shm_posix.h"
-
-#if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#endif
+
+#include "ipc_shm_posix.h"
 
 #ifdef __cplusplus
 extern "C"

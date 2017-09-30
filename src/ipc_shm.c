@@ -21,16 +21,12 @@
  * \date 2016
  */
 
-#if !defined(_WIN32) && !defined(_WIN64)
-/* Unix variants */
 #include <unistd.h>
-#endif
 
 #include "ipc_shm.h"
 #include "ipc_shm_impl.h"
 #include "ipc_shm_posix.h"
 #include "ipc_shm_sysv.h"
-/*#include "ipc_shm_win.h"*/
 
 #ifdef __cplusplus
 extern "C"
@@ -48,11 +44,6 @@ ipc_shm ipc_shm_new(enum ipc_shm_type type, void* value, int mode, int perm,
     case IPC_SHM_POSIX:
       return ipc_shm_posix_new(value, mode, perm, size);
       break;
-    /*
-    case IPC_SHM_WIN:
-      return ipc_shm_win_new(value, mode, perm);
-      break;
-    */
     default:
       return NULL;
       break;
@@ -76,14 +67,8 @@ size_t ipc_shm_get_data_size(ipc_shm obj)
 
 int ipc_shm_is_supported(enum ipc_shm_type type)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  return type == IPC_SHM_WIN;
-#else
   switch(type)
   {
-    case IPC_SHM_WIN:
-      return 0;
-      break;
     case IPC_SHM_SYSV:
       return 1;
       break;
@@ -98,14 +83,11 @@ int ipc_shm_is_supported(enum ipc_shm_type type)
       return 0;
       break;
   }
-#endif
 }
 
 enum ipc_shm_type ipc_shm_get_best_type(void)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  return IPC_SHM_WIN;
-#elif defined(_POSIX_MESSAGE_PASSING)
+#if defined(_POSIX_MESSAGE_PASSING)
   return IPC_SHM_POSIX;
 #else
   return IPC_SHM_SYSV;

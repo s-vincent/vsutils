@@ -37,7 +37,6 @@ enum ipc_mq_type
 {
   IPC_MQ_SYSV, /**< SystemV MQ IPC. */
   IPC_MQ_POSIX, /**< POSIX MQ IPC. */
-  IPC_MQ_WIN /**< Windows MQ IPC. */
 };
 
 /**
@@ -74,7 +73,6 @@ typedef struct ipc_mq* ipc_mq;
  * \param perm permissions (bitfield of S_IRUSR, S_IWUSR, S_IRGRP, S_IWGRP,
  * S_IROTH or S_IWOTH).
  * \return IPC message queue pointer.
- * \warning Some parameters of permission may be ignored for MQ_WIN type.
  */
 ipc_mq ipc_mq_new(enum ipc_mq_type type, void* value, int mode, int perm);
 

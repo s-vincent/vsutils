@@ -21,16 +21,12 @@
  * \date 2016
  */
 
-#if !defined(_WIN32) && !defined(_WIN64)
-/* Unix variants */
 #include <unistd.h>
-#endif
 
 #include "ipc_sem.h"
 #include "ipc_sem_impl.h"
 #include "ipc_sem_posix.h"
 #include "ipc_sem_sysv.h"
-/*#include "ipc_sem_win.h"*/
 
 #ifdef __cplusplus
 extern "C"
@@ -48,11 +44,6 @@ ipc_sem ipc_sem_new(enum ipc_sem_type type, void* value, int mode, int perm,
     case IPC_SEM_POSIX:
       return ipc_sem_posix_new(value, mode, perm, init);
       break;
-      /*
-      case IPC_SEM_WIN:
-        return ipc_sem_win_new(value, mode, perm);
-        break;
-      */
     default:
       return NULL;
   }
@@ -75,14 +66,8 @@ int ipc_sem_unlock(ipc_sem obj)
 
 int ipc_sem_is_supported(enum ipc_sem_type type)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  return type == IPC_SEM_WIN;
-#else
   switch(type)
   {
-    case IPC_SEM_WIN:
-      return 0;
-      break;
     case IPC_SEM_SYSV:
       return 1;
       break;
@@ -97,14 +82,11 @@ int ipc_sem_is_supported(enum ipc_sem_type type)
       return 0;
       break;
   }
-#endif
 }
 
 enum ipc_sem_type ipc_sem_get_best_type(void)
 {
-#if defined(_WIN32) || defined(_WIN64)
-  return IPC_SEM_WIN;
-#elif defined(_POSIX_SEMAPHORES)
+#if defined(_POSIX_SEMAPHORES)
   return IPC_SEM_POSIX;
 #else
   return IPC_SEM_SYSV;
