@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2013 Sebastien Vincent.
+ * Copyright (C) 2008-2017 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,7 +21,7 @@
  * \file util_crypto.h
  * \brief Some helper cryptographic functions.
  * \author Sebastien Vincent
- * \date 2008-2013
+ * \date 2008-2017
  */
 
 #ifndef VSUTILS_UTIL_CRYPTO
@@ -69,6 +69,36 @@ int crypto_sha1_generate(unsigned char* hash, const unsigned char* text,
     size_t len);
 
 /**
+ * \brief Generate a SHA-256 hash.
+ * \param hash buffer with at least 32 bytes length.
+ * \param text text to hash.
+ * \param len text length.
+ * \return 0 if success, -1 otherwise.
+ */
+int crypto_sha256_generate(unsigned char* hash, const unsigned char* text,
+    size_t len);
+
+/**
+ * \brief Generate a SHA-384 hash.
+ * \param hash buffer with at least 48 bytes length.
+ * \param text text to hash.
+ * \param len text length.
+ * \return 0 if success, -1 otherwise.
+ */
+int crypto_sha384_generate(unsigned char* hash, const unsigned char* text,
+    size_t len);
+
+/**
+ * \brief Generate a SHA-512 hash.
+ * \param hash buffer with at least 64 bytes length.
+ * \param text text to hash.
+ * \param len text length.
+ * \return 0 if success, -1 otherwise.
+ */
+int crypto_sha512_generate(unsigned char* hash, const unsigned char* text,
+    size_t len);
+
+/**
  * \brief Generate a MD5 hash.
  * \param hash buffer with at least 16 bytes length.
  * \param text text to hash.
@@ -88,6 +118,42 @@ int crypto_md5_generate(unsigned char* hash, const unsigned char* text,
  * \return 0 if success, -1 otherwise.
  */
 int crypto_hmac_sha1_generate(unsigned char* hash, const unsigned char* text,
+    size_t text_len, const unsigned char* key, size_t key_len);
+
+/**
+ * \brief Generate a HMAC-SHA-256 hash.
+ * \param hash buffer with at least 32 bytes length.
+ * \param text text to hash.
+ * \param text_len text length.
+ * \param key key used for HMAC.
+ * \param key_len key length.
+ * \return 0 if success, -1 otherwise.
+ */
+int crypto_hmac_sha256_generate(unsigned char* hash, const unsigned char* text,
+    size_t text_len, const unsigned char* key, size_t key_len);
+
+/**
+ * \brief Generate a HMAC-SHA-384 hash.
+ * \param hash buffer with at least 48 bytes length.
+ * \param text text to hash.
+ * \param text_len text length.
+ * \param key key used for HMAC.
+ * \param key_len key length.
+ * \return 0 if success, -1 otherwise.
+ */
+int crypto_hmac_sha384_generate(unsigned char* hash, const unsigned char* text,
+    size_t text_len, const unsigned char* key, size_t key_len);
+
+/**
+ * \brief Generate a HMAC-SHA-512 hash.
+ * \param hash buffer with at least 64 bytes length.
+ * \param text text to hash.
+ * \param text_len text length.
+ * \param key key used for HMAC.
+ * \param key_len key length.
+ * \return 0 if success, -1 otherwise.
+ */
+int crypto_hmac_sha512_generate(unsigned char* hash, const unsigned char* text,
     size_t text_len, const unsigned char* key, size_t key_len);
 
 /**

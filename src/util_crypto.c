@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2013 Sebastien Vincent.
+ * Copyright (C) 2008-2017 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,15 +21,11 @@
  * \file util_crypto.c
  * \brief Some helper cryptographic functions.
  * \author Sebastien Vincent
- * \date 2008-2013
+ * \date 2008-2017
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#if !defined(_WIN32) && !defined(_WIN64)
-#include <unistd.h>
-#endif
 
 #include <time.h>
 #include <errno.h>
@@ -48,25 +44,6 @@ extern "C"
 
 int crypto_seed_prng_init(void)
 {
-#if !defined(_WIN32) && !defined(_WIN64)
-  if(access("/dev/urandom", F_OK) != ENOENT)
-  {
-    /* OpenSSL use /dev/urandom by default */
-  }
-  else
-  {
-    time_t now = time(NULL) + getpid();
-
-    /* initialize seed */
-    RAND_seed(&now, sizeof(now)); /* not very good... */
-  }
-#else
-  /* RAND_screen() or RAND_event() are not good for servers applications (run
-   * without user interaction). However it seems that OpenSSL already initialize
-   * something internally for Windows.
-   */
-#endif
-
   /* check the strongness of seed */
   if(!RAND_status())
   {
@@ -102,6 +79,39 @@ int crypto_sha1_generate(unsigned char* hash, const unsigned char* text,
   return 0;
 }
 
+int crypto_sha256_generate(unsigned char* hash, const unsigned char* text,
+    size_t len)
+{
+  if(!SHA256(text, len, hash))
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+int crypto_sha384_generate(unsigned char* hash, const unsigned char* text,
+    size_t len)
+{
+  if(!SHA384(text, len, hash))
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+int crypto_sha512_generate(unsigned char* hash, const unsigned char* text,
+    size_t len)
+{
+  if(!SHA512(text, len, hash))
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
 int crypto_md5_generate(unsigned char* hash, const unsigned char* text,
     size_t len)
 {
@@ -119,6 +129,45 @@ int crypto_hmac_sha1_generate(unsigned char* hash, const unsigned char* text,
   unsigned int md_len = SHA_DIGEST_LENGTH;
 
   if(!HMAC(EVP_sha1(), key, (int)key_len, text, text_len, hash, &md_len))
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+int crypto_hmac_sha256_generate(unsigned char* hash, const unsigned char* text,
+    size_t text_len, const unsigned char* key, size_t key_len)
+{
+  unsigned int md_len = SHA256_DIGEST_LENGTH;
+
+  if(!HMAC(EVP_sha256(), key, (int)key_len, text, text_len, hash, &md_len))
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+int crypto_hmac_sha384_generate(unsigned char* hash, const unsigned char* text,
+    size_t text_len, const unsigned char* key, size_t key_len)
+{
+  unsigned int md_len = SHA384_DIGEST_LENGTH;
+
+  if(!HMAC(EVP_sha384(), key, (int)key_len, text, text_len, hash, &md_len))
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+int crypto_hmac_sha512_generate(unsigned char* hash, const unsigned char* text,
+    size_t text_len, const unsigned char* key, size_t key_len)
+{
+  unsigned int md_len = SHA512_DIGEST_LENGTH;
+
+  if(!HMAC(EVP_sha512(), key, (int)key_len, text, text_len, hash, &md_len))
   {
     return -1;
   }
