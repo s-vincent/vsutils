@@ -55,9 +55,9 @@ struct netevt
 int netevt_is_method_supported(enum netevt_method method)
 {
 #ifdef __linux__
-  /* *BSD specific */
   if(method == NETEVT_KQUEUE)
   {
+    /* *BSD specific */
     return 0;
   }
   else
@@ -75,9 +75,9 @@ int netevt_is_method_supported(enum netevt_method method)
     return 1;
   }
 #elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
-  /* Linux specific */
   if(method == NETEVT_EPOLL)
   {
+    /* Linux specific */
     return 0;
   }
   else
@@ -86,14 +86,14 @@ int netevt_is_method_supported(enum netevt_method method)
     return 1;
   }
 #else
-  /* Linux and *BSD specific */
   if(method == NETEVT_EPOLL || method == NETEVT_KQUEUE)
   {
+    /* Linux and *BSD specific */
     return 0;
   }
   else
   {
-    /* select and poll useally is supported on many platforms */
+    /* select and poll are usually supported on many other Unix platforms */
     return 1;
   }
 #endif

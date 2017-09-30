@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-
 #include <stdint.h>
 
 #ifdef _MSC_VER
