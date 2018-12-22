@@ -88,7 +88,8 @@ ipc_mq ipc_mq_posix_new(void* value, int mode, int perm)
   ret->send = ipc_mq_posix_send;
   ret->recv = ipc_mq_posix_recv;
   priv = (struct ipc_mq_posix*)&ret->priv;
-  strncpy(priv->name, name, sizeof(priv->name));
+  strncpy(priv->name, name, sizeof(priv->name) - 1);
+  priv->name[sizeof(priv->name) - 1] = 0x00;
   priv->mq = mq;
   priv->max_msg_size = attr.mq_msgsize;
 

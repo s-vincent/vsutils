@@ -91,6 +91,7 @@ ipc_shm ipc_shm_posix_new(void* value, int mode, int perm, size_t size)
   ret->get_data_size = ipc_shm_posix_get_data_size;
   priv = (struct ipc_shm_posix*)&ret->priv;
   strncpy(priv->name, name, sizeof(priv->name));
+  priv->name[sizeof(priv->name) - 1] = 0x00;
   priv->shm = shm;
 
   return ret;

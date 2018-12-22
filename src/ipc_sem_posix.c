@@ -79,7 +79,8 @@ ipc_sem ipc_sem_posix_new(void* value, int mode, int perm, unsigned int init)
   ret->lock = ipc_sem_posix_lock;
   ret->unlock = ipc_sem_posix_unlock;
   priv = (struct ipc_sem_posix*)&ret->priv;
-  strncpy(priv->name, name, sizeof(priv->name));
+  strncpy(priv->name, name, sizeof(priv->name) - 1);
+  priv->name[sizeof(priv->name) - 1] = 0x00;
   priv->sem = sem;
 
   return ret;
