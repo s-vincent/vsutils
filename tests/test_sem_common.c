@@ -40,7 +40,7 @@ int test_ipc_sem(enum ipc_sem_type type, void* arg)
         return -1;
     }
 
-    sem = ipc_sem_new(type, arg, O_CREAT | O_RDWR, 0700, 1);
+    sem = ipc_sem_new(type, arg, O_CREAT, 0700, 1);
     if(!sem)
     {
         perror("ipc_sem_new");

@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
     test_ipc_print_sem();
 
-    if(test_ipc_sem(type, "/test_sem_posix") == 0)
+    if(test_ipc_sem(type, "/test_sem") == 0)
     {
         return EXIT_SUCCESS;
     }

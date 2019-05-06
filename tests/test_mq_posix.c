@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
     test_ipc_print_mq();
 
-    if(test_ipc_mq(type, "/test_mq_posix") == 0)
+    if(test_ipc_mq(type, "/test_mq") == 0)
     {
         return EXIT_SUCCESS;
     }

@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
     test_ipc_print_shm();
 
-    if(test_ipc_shm(type, "/test_shm_posix") == 0)
+    if(test_ipc_shm(type, "/test_shm") == 0)
     {
         return EXIT_SUCCESS;
     }

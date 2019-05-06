@@ -1609,13 +1609,17 @@ int net_iface_set_addr(int ifindex, const char* addr, size_t size)
 
   ret = ioctl(sock, SIOCSIFHWADDR, &ifr);
   close(sock);
-#else
+#elif defined(SIOCSIFLLADDR)
   ifr.ifr_addr.sa_len = size;
   ifr.ifr_addr.sa_family = AF_LINK;
   memcpy(ifr.ifr_addr.sa_data, addr, size);
 
   ret = ioctl(sock, SIOCSIFLLADDR, (caddr_t)&ifr);
   close(sock);
+#else
+  /* TODO */
+  (void)addr;
+  (void)size;
 #endif
   return ret;
 }
