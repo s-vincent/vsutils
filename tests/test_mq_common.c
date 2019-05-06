@@ -59,7 +59,7 @@ int test_ipc_mq(enum ipc_mq_type type, void* arg)
     output->priv = 1;
     memset(output->data, 0x00, msg_size);
 
-    strncpy(input->data, "TEST", sizeof("TEST"));
+    strncpy(input->data, "TEST", strlen("TEST") + 1);
 
     if(ipc_mq_send(mq, input, msg_size) != -1)
     {
