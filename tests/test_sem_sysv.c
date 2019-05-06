@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <sys/types.h>
+
 #include "test_sem_common.h"
 
 #define MAGIC_COOKIE_SEM (key_t)0xCAFE

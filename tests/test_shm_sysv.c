@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <sys/types.h>
+
 #include "test_shm_common.h"
 
 #define MAGIC_COOKIE_SHM (key_t)0xCAFE
