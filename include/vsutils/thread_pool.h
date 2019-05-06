@@ -18,7 +18,7 @@
  * \file thread_pool.h
  * \brief Thread pool for tasks.
  * \author Sebastien Vincent
- * \date 2014-2016
+ * \date 2014-2019
  */
 
 #ifndef VSUTILS_THREAD_POOL_H
@@ -65,14 +65,16 @@ void thread_pool_free(thread_pool* obj);
 /**
  * \brief Start the thread pool.
  * \param obj thread pool.
+ * \return 0 if success, -1 otherwise.
  */
-void thread_pool_start(thread_pool obj);
+int thread_pool_start(thread_pool obj);
 
 /**
  * \brief Stop the thread pool.
  * \param obj thread pool.
+ * \return 0 if success, -1 otherwise.
  */
-void thread_pool_stop(thread_pool obj);
+int thread_pool_stop(thread_pool obj);
 
 /**
  * \brief Push a task to the thread pool.

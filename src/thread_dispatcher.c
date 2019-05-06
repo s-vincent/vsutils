@@ -18,7 +18,7 @@
  * \file thread_dispatcher.c
  * \brief Thread dispatcher for tasks.
  * \author Sebastien Vincent
- * \date 2016
+ * \date 2016-2019
  */
 
 #include <stdio.h>
@@ -99,7 +99,7 @@ struct thread_worker
   /**
    * \brief Dispatcher parent.
    */
-	struct thread_dispatcher* dispatcher;
+  struct thread_dispatcher* dispatcher;
 
   /**
    * \brief List of tasks.
@@ -110,32 +110,35 @@ struct thread_worker
 /**
  * \brief Atomically get run state.
  * \param obj thread dispatcher.
- * \return run state.
+ * \return run state or -99 if failure.
  */
 static int thread_dispatcher_get_run(struct thread_dispatcher* obj)
 {
-  int run = 0;
-
-  pthread_rwlock_rdlock(&obj->mutex_run);
+  if(pthread_rwlock_rdlock(&obj->mutex_run) == 0)
   {
-    run = obj->run;
+    int run = obj->run;
+    pthread_rwlock_unlock(&obj->mutex_run);
+    return run;
   }
-  pthread_rwlock_unlock(&obj->mutex_run);
-  return run;
+
+  return -99;
 }
 
 /**
  * \brief Atomically set run state.
  * \param obj thread dispatcher.
- * \param run run state to set
+ * \param run run state to set or -1 if failure.
  */
-static void thread_dispatcher_set_run(struct thread_dispatcher* obj, int run)
+static int thread_dispatcher_set_run(struct thread_dispatcher* obj, int run)
 {
-  pthread_rwlock_wrlock(&obj->mutex_run);
+  if(pthread_rwlock_wrlock(&obj->mutex_run) == 0)
   {
     obj->run = run;
+    pthread_rwlock_unlock(&obj->mutex_run);
+    return 0;
   }
-  pthread_rwlock_unlock(&obj->mutex_run);
+
+  return -1;
 }
 
 /**
@@ -204,18 +207,16 @@ static int thread_worker_pop(struct thread_worker* worker,
 
   assert(worker && task);
 
-  pthread_mutex_lock(&worker->mutex_tasks);
+  if(pthread_mutex_lock(&worker->mutex_tasks) == 0)
   {
     struct list_head* pos = NULL;
-    int run = 0;
-
-    run = thread_dispatcher_get_run(worker->dispatcher);
+    int run = thread_dispatcher_get_run(worker->dispatcher);
 
     /* if arrived after condition signaled */
     if(run <= 0)
     {
       pthread_mutex_unlock(&worker->mutex_tasks);
-      return -1;
+      return run;
     }
 
     while(list_head_is_empty(&worker->tasks))
@@ -288,7 +289,7 @@ static void* thr_worker(void* data)
     if(run == 0)
     {
       /* stop case */
-      pthread_mutex_lock(&dispatcher->mutex_start);
+      if(pthread_mutex_lock(&dispatcher->mutex_start) == 0)
       {
         while(run == 0)
         {
@@ -297,14 +298,25 @@ static void* thr_worker(void* data)
 
           run = thread_dispatcher_get_run(dispatcher);
         }
+        pthread_mutex_unlock(&dispatcher->mutex_start);
       }
-      pthread_mutex_unlock(&dispatcher->mutex_start);
+      else
+      {
+        /* problem locking mutex? */
+        sched_yield();
+      }
+
       continue;
     }
     else if(run == -1)
     {
       /* free case */
       break;
+    }
+    else if(run < 0)
+    {
+      /* probably pthread_rwlock_rdlock has failed due to too many calls */
+      sched_yield();
     }
     else
     {
@@ -389,15 +401,20 @@ thread_dispatcher thread_dispatcher_new(size_t nb)
     /* error creating all threads, cancel the created ones */
     for(size_t i = 0 ; i < ret->nb_threads ; i++)
     {
-      pthread_mutex_lock(&ret->mutex_start);
+      if(pthread_mutex_lock(&ret->mutex_start) == 0)
       {
         /* tell the threads that they have to quit */
         pthread_cond_broadcast(&ret->cond_start);
-      }
-      pthread_mutex_unlock(&ret->mutex_start);
+        pthread_mutex_unlock(&ret->mutex_start);
 
-      /* join the threads and destroy private thread worker stuff */
-      pthread_join(ret->threads[i].id, NULL);
+        /* join the threads and destroy private thread worker stuff */
+        pthread_join(ret->threads[i].id, NULL);
+      }
+      else
+      {
+        pthread_cancel(ret->threads[i].id);
+      }
+
       thread_worker_destroy(&ret->threads[i]);
     }
 
@@ -414,31 +431,36 @@ void thread_dispatcher_free(thread_dispatcher* obj)
 {
   assert(obj);
 
-  pthread_mutex_lock(&(*obj)->mutex_start);
+  if(pthread_mutex_lock(&(*obj)->mutex_start) == 0)
   {
     /* tell the threads that they have to quit */
     thread_dispatcher_set_run(*obj, -1);
 
     pthread_cond_broadcast(&(*obj)->cond_start);
+    pthread_mutex_unlock(&(*obj)->mutex_start);
   }
-  pthread_mutex_unlock(&(*obj)->mutex_start);
 
   /* wait for the threads */
   for(size_t i = 0 ; i < (*obj)->nb_threads ; i++)
   {
     struct thread_worker* worker = &(*obj)->threads[i];
 
-    pthread_mutex_lock(&worker->mutex_tasks);
+    if(pthread_mutex_lock(&worker->mutex_tasks) == 0)
     {
       /*
        * unblock worker waiting for tasks
-       * worker will then check for run variable (-1) and exit
+       * worker will then check for run variable and exit
        */
       pthread_cond_signal(&worker->cond_tasks);;
-    }
-    pthread_mutex_unlock(&worker->mutex_tasks);
+      pthread_mutex_unlock(&worker->mutex_tasks);
 
-    pthread_join(worker->id, NULL);
+      pthread_join(worker->id, NULL);
+    }
+    else
+    {
+      pthread_cancel(worker->id);
+    }
+
     thread_worker_destroy(worker);
   }
 
@@ -489,7 +511,7 @@ int thread_dispatcher_push(thread_dispatcher obj,
   worker = &obj->threads[selected];
 
   /* enqueue in the selected thread worker queue */
-  pthread_mutex_lock(&worker->mutex_tasks);
+  if(pthread_mutex_lock(&worker->mutex_tasks) == 0)
   {
     int first = list_head_is_empty(&worker->tasks);
     list_head_add_tail(&worker->tasks, &t->list);
@@ -506,8 +528,14 @@ int thread_dispatcher_push(thread_dispatcher obj,
         return -1;
       }
     }
+    pthread_mutex_unlock(&worker->mutex_tasks);
   }
-  pthread_mutex_unlock(&worker->mutex_tasks);
+  else
+  {
+    free(t);
+    return -1;
+  }
+
   return 0;
 }
 
@@ -516,6 +544,7 @@ int thread_dispatcher_clean(thread_dispatcher obj)
   struct list_head* pos = NULL;
   struct list_head* tmp = NULL;
   int run = 0;
+  int ret = 0;
 
   assert(obj);
 
@@ -531,7 +560,7 @@ int thread_dispatcher_clean(thread_dispatcher obj)
   {
     struct thread_worker* worker = &obj->threads[i];
 
-    pthread_mutex_lock(&worker->mutex_tasks);
+    if(pthread_mutex_lock(&worker->mutex_tasks) == 0)
     {
       list_head_iterate_safe(&worker->tasks, pos, tmp)
       {
@@ -540,35 +569,53 @@ int thread_dispatcher_clean(thread_dispatcher obj)
         list_head_remove(&worker->tasks, &t->list);
         free(t);
       }
+
       pthread_cond_broadcast(&worker->cond_tasks);
+      pthread_mutex_unlock(&worker->mutex_tasks);
     }
-    pthread_mutex_unlock(&worker->mutex_tasks);
+    else
+    {
+      /* mark as not all threads are clean */
+      ret = -1;
+    }
+  }
+
+  return ret;
+}
+
+int thread_dispatcher_start(thread_dispatcher obj)
+{
+  assert(obj);
+
+  if(pthread_mutex_lock(&obj->mutex_start) == 0)
+  {
+    thread_dispatcher_set_run(obj, 1);
+    pthread_cond_broadcast(&obj->cond_start);
+    pthread_mutex_unlock(&obj->mutex_start);
+  }
+  else
+  {
+    return -1;
   }
 
   return 0;
 }
 
-void thread_dispatcher_start(thread_dispatcher obj)
+int thread_dispatcher_stop(thread_dispatcher obj)
 {
   assert(obj);
 
-  pthread_mutex_lock(&obj->mutex_start);
-  {
-    thread_dispatcher_set_run(obj, 1);
-    pthread_cond_broadcast(&obj->cond_start);
-  }
-  pthread_mutex_unlock(&obj->mutex_start);
-}
-
-void thread_dispatcher_stop(thread_dispatcher obj)
-{
-  assert(obj);
-
-  pthread_mutex_lock(&obj->mutex_start);
+  if(pthread_mutex_lock(&obj->mutex_start) == 0)
   {
     thread_dispatcher_set_run(obj, 0);
     pthread_cond_broadcast(&obj->cond_start);
+    pthread_mutex_unlock(&obj->mutex_start);
   }
-  pthread_mutex_unlock(&obj->mutex_start);
+  else
+  {
+    return -1;
+  }
+
+  return 0;
 }
 

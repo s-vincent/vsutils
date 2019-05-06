@@ -18,7 +18,7 @@
  * \file thread_dispatcher.h
  * \brief Thread dispatcher for tasks.
  * \author Sebastien Vincent
- * \date 2016
+ * \date 2016-2019
  */
 
 #ifndef VSUTILS_THREAD_DISPATCHER_H
@@ -80,14 +80,16 @@ void thread_dispatcher_free(thread_dispatcher* obj);
 /**
  * \brief Start the thread dispatcher.
  * \param obj thread dispatcher.
+ * \return 0 if success, -1 on failure.
  */
-void thread_dispatcher_start(thread_dispatcher obj);
+int thread_dispatcher_start(thread_dispatcher obj);
 
 /**
  * \brief Stop the thread dispatcher.
  * \param obj thread dispatcher.
+ * \return 0 if success, -1 on failure.
  */
-void thread_dispatcher_stop(thread_dispatcher obj);
+int thread_dispatcher_stop(thread_dispatcher obj);
 
 /**
  * \brief Push a task to be dispatch to random thread.
