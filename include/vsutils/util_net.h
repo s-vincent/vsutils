@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Sebastien Vincent.
+ * Copyright (C) 2013-2017 Sebastien Vincent.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * \file util_net.h
  * \brief Some helper network functions.
  * \author Sebastien Vincent
- * \date 2013-2016
+ * \date 2013-2019
  */
 
 #ifndef VSUTILS_UTIL_NET
@@ -30,17 +30,12 @@
 
 #include <stdint.h>
 
-#if !defined(_WIN32) && !defined(_WIN64)
 #include <sys/uio.h>
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#else
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#include <windows.h>
-#endif
+#include <net/if.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -68,17 +63,26 @@ enum protocol_type
   NET_TCP = IPPROTO_TCP, /**< TCP protocol. */
 };
 
-#if defined(_WIN32) || defined(_WIN64)
 /**
- * \struct iovec
- * \brief iovector structure for win32.
+ * \brief Network interface description.
  */
-typedef struct iovec
+struct net_iface
 {
-  void* iov_base; /**< Pointer on data. */
-  size_t iov_len; /**< Size of data. */
-}iovec;
-#endif
+  /**
+   * \brief Interface index.
+   */
+  unsigned int ifindex;
+
+  /**
+   * \brief Interface name.
+   */
+  char ifname[IF_NAMESIZE];
+
+  /**
+   * \brief Interface link-layer address.
+   */
+  char ifaddr[16];
+};
 
 /**
  * \brief Specific cast for FD_* macro.
@@ -109,7 +113,6 @@ typedef struct iovec
  */
 struct net_sfd_set
 {
-#if !defined(_WIN32) && !defined(_WIN64)
   long int fds_bits[NET_SFD_SETSIZE / (8 * sizeof(long int))]; /**< Bitmask. */
 
   /**
@@ -117,10 +120,6 @@ struct net_sfd_set
    * \brief Definition of __fds_bits for *BSD.
    */
 #define __fds_bits fds_bits
-#else
-  SOCKET fd_array[NET_SFD_SETSIZE]; /**< Bitmask. */
-#define fd_mask
-#endif
 };
 
 /**
@@ -282,6 +281,361 @@ int net_ipv6_address_is_valid(const char* address);
  * \return 1 if the address is an IPv6 tunneled ones, 0 otherwise.
  */
 int net_ipv6_address_is_tunneled(const struct in6_addr* addr);
+
+/**
+ * \brief Converts an IPv6 prefix length struct in6_addr.
+ * \param prefix prefix length.
+ * \param addr address that will be filled.
+ * \return 0 if success, -1 otherwise.
+ */
+int net_ipv6_netmask_get_prefix(unsigned int prefix, struct in6_addr* addr);
+
+/**
+ * \brief Converts an IPv6 netmask into prefix length.
+ * \param addr IPv6 netmask.
+ * \return prefix prefix length.
+ */
+unsigned int net_ipv6_netmask_get_prefix_length(struct in6_addr* addr);
+
+/**
+ * \brief Returns list of IPv4 addresses for an interface.
+ * \param ifindex interface index.
+ * \param addrs pointer that will be allocated to hold IPv4 addresses.
+ * \return number of IPv4 addresses returned or -1 if error.
+ */
+int net_ipv4_get_addresses(int ifindex, struct in_addr** addrs);
+
+/**
+ * \brief Adds an IPv4 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv4 address.
+ * \param prefix IPv4 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_add_address(int ifindex, const struct in_addr* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Adds an IPv4 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv4 address.
+ * \param prefix IPv4 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_add_address_str(int ifindex, const char* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Removes an IPv4 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv4 address.
+ * \param prefix IPv4 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_del_address(int ifindex, const struct in_addr* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Removes an IPv4 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv4 address.
+ * \param prefix IPv4 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_del_address_str(int ifindex, const char* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Adds an IPv4 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv4 route.
+ * \param prefix IPv4 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_add_route(int ifindex, const struct in_addr* dst,
+    unsigned int prefix, const struct in_addr* gw);
+
+/**
+ * \brief Adds an IPv4 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv4 route.
+ * \param prefix IPv4 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_add_route_str(int ifindex, const char* dst, unsigned int prefix,
+    const char* gw);
+
+/**
+ * \brief Removes an IPv4 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv4 route.
+ * \param prefix IPv4 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_del_route(int ifindex, const struct in_addr* dst,
+    unsigned int prefix, const struct in_addr* gw);
+
+/**
+ * \brief Removes an IPv4 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv4 route.
+ * \param prefix IPv4 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv4_del_route_str(int ifindex, const char* dst, unsigned int prefix,
+    const char* gw);
+
+/**
+ * \brief Returns list of IPv6 addresses for an interface.
+ * \param ifindex interface index.
+ * \param addrs pointer that will be allocated to hold IPv6 addresses.
+ * \return number of IPv6 addresses returned or -1 if error.
+ */
+int net_ipv6_get_addresses(int ifindex, struct in6_addr** addrs);
+
+/**
+ * \brief Adds an IPv6 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv6 address.
+ * \param prefix IPv6 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_add_address(int ifindex, const struct in6_addr* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Adds an IPv6 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv6 address.
+ * \param prefix IPv6 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_add_address_str(int ifindex, const char* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Removes an IPv6 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv6 address.
+ * \param prefix IPv6 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_del_address(int ifindex, const struct in6_addr* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Removes an IPv6 address to an interface.
+ * \param ifindex interface index.
+ * \param addr IPv6 address.
+ * \param prefix IPv6 prefix.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_del_address_str(int ifindex, const char* addr,
+    unsigned int prefix);
+
+/**
+ * \brief Adds an IPv6 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv6 route.
+ * \param prefix IPv6 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_add_route(int ifindex, const struct in6_addr* dst,
+    unsigned int prefix, const struct in6_addr* gw);
+
+/**
+ * \brief Adds an IPv6 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv6 route.
+ * \param prefix IPv6 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_add_route_str(int ifindex, const char* dst, unsigned int prefix,
+    const char* gw);
+
+/**
+ * \brief Removes an IPv6 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv6 route.
+ * \param prefix IPv6 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_del_route(int ifindex, const struct in6_addr* dst,
+    unsigned int prefix, const struct in6_addr* gw);
+
+/**
+ * \brief Removes an IPv6 route to an interface.
+ * \param ifindex interface index.
+ * \param dst IPv6 route.
+ * \param prefix IPv6 prefix.
+ * \param gw gateway if any.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_ipv6_del_route_str(int ifindex, const char* dst, unsigned int prefix,
+    const char* gw);
+
+/**
+ * \brief Joins an IPv4 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv4 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_join_mcast(int fd, int ifindex, const struct in_addr* group);
+
+/**
+ * \brief Joins an IPv4 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv4 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_join_mcast_str(int fd, int ifindex, const char* group);
+
+/**
+ * \brief Leaves an IPv4 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv4 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_leave_mcast(int fd, int ifindex, const struct in_addr* group);
+
+/**
+ * \brief Leaves an IPv4 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv4 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_leave_mcast_str(int fd, int ifindex, const char* group);
+
+/**
+ * \brief Joins an IPv6 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv6 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_join_mcast6(int fd, int ifindex, const struct in6_addr* group);
+
+/**
+ * \brief Joins an IPv6 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv6 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_join_mcast6_str(int fd, int ifindex, const char* group);
+
+/**
+ * \brief Leaves an IPv6 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv6 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_leave_mcast6(int fd, int ifindex, const struct in6_addr* group);
+
+/**
+ * \brief Leaves an IPv6 multicast group.
+ * \param fd socket descriptor.
+ * \param ifindex interface index.
+ * \param group IPv6 multicast group.
+ * \return 0 if success, -1 otherwise (check errno for reason).
+ */
+int net_sock_leave_mcast6_str(int fd, int ifindex, const char* group);
+
+/**
+ * \brief Returns list of network interfaces.
+ * \param ifaces pointer that will be allocated.
+ * \return number of interfaces returned if success, -1 otherwise.
+ * \note Caller is responsible to free() ifaces parameter.
+ */
+int net_iface_list(struct net_iface** ifaces);
+
+/**
+ * \brief Returns whether network interface has flag enable.
+ * \param ifindex interface index.
+ * \param flag flag to test.
+ * \return 1 if flag is set, 0 if not set, -1 if error.
+ */
+int net_iface_get_flag(int ifindex, int flag);
+
+/**
+ * \brief Returns whether network interface has flag enable.
+ * \param ifindex interface index.
+ * \param flag flag to test.
+ * \param enable 1 to enable, 0 to disable.
+ * \return 0 if success, -1 otherwise.
+ */
+int net_iface_set_flag(int ifindex, int flag, int enable);
+
+/**
+ * \brief Returns whether or not network interface is UP.
+ * \param ifindex interface index.
+ * \return 1 if network interface is UP, 0 if not, -1 if error.
+ */
+int net_iface_is_up(int ifindex);
+
+/**
+ * \brief Sets the network interface UP or DOWN.
+ * \param ifindex interface index.
+ * \param up 1 to set interface UP, 0 to set interface DOWN.
+ * \return 0 if success, -1 otherwise.
+ */
+int net_iface_set_up(int ifindex, int up);
+
+/**
+ * \brief Returns MTU of network interface.
+ * \param ifindex interface index.
+ * \return MTU of network interface is UP, -1 if error.
+ */
+int net_iface_get_mtu(int ifindex);
+
+/**
+ * \brief Sets the network interface MTU.
+ * \param ifindex interface index.
+ * \param mtu mtu to set.
+ * \return 0 if success, -1 otherwise.
+ */
+int net_iface_set_mtu(int ifindex, unsigned int mtu);
+
+/**
+ * \brief Sets a link-layer address on a network interface.
+ * \param ifindex interface index.
+ * \param addr link-layer address (in binary).
+ * \param size address size in bytes (6 for ethernet).
+ * \return 0 if success, -1 otherwise.
+ */
+int net_iface_set_addr(int ifindex, const char* addr, size_t size);
+
+/**
+ * \brief Converts a human-readable ethernet address into link-layer address.
+ * \param src human-readable ethernet address.
+ * \param dst address.
+ * \return 0 if success, -1 otherwise.
+ * \note Format of the ethernet address can be :
+ * - separated by hyphens (00-00-00-00-00-00);
+ * - separeted by colons (00:00:00:00:00:00).
+ */
+int net_eth_pton(const char* src, void* dst);
+
+/**
+ * \brief Converts a link-layer address into human-readable form.
+ * \param src link-layer address.
+ * \param dst buffer to hold the human-readable form.
+ * \param size size of buffer.
+ * \return dst if success, NULL otherwise.
+ */
+char* net_eth_ntop(const void* src, char* dst, socklen_t size);
 
 #ifdef __cplusplus
 }
