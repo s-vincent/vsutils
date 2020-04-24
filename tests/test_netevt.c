@@ -80,7 +80,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  sock = net_socket_create(AF_INET, IPPROTO_TCP, "127.0.0.1", 8022, 1, 1);
+  sock = net_socket_create(AF_INET, NET_TCP, "127.0.0.1", 8022, 1, 1);
 
   if(sock == -1)
   {
